@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-minDB.xml,v 1.57 2006/09/11 20:28:24 farrukh_najmi Exp $-->
+<project basedir="." default="dummy" name="omar-build-minDB">
+
+<target name="dummy" description="Dummy default target, does nothing"/>
+
+<!-- ======================================================== -->
+<!-- Contains targets related to building test databases -->
+<!-- ======================================================== -->
+
+  <!-- The minimum database -->
+  <target name="createIntrinsicDB" depends="call-createdb, call-createrepdb, call-loadIntrinsicData">
+    <echo message="Created a minimal database"/>
+    <echo message="omar.home: ${omar.home}"/>
+  </target>
+  <target name="createMinDB" depends="createIntrinsicDB, loadMinDB">
+    <echo message="Created a minimal database"/>
+    <echo message="omar.home: ${omar.home}"/>
+  </target>
+  <target name="loadMinDB" depends="i18n.minDB, loadSchemes, loadConfig, loadXSLT"/>
+  <target name="loadIntrinsicData" depends="conf">
+    <echo message="Loading instrinsic factory data in database at: ${dbURL.fixed}"/>
+    <sql autocommit="false" driver="${jdbcClassName}" password="${dbPassword}" print="yes" src="${build.home}/conf/database/intrinsicData.sql" url="${dbURL.fixed}" userid="${dbUsername}">
+      <classpath>
+        <pathelement location="${jdbcDriver.fullpath}"/>
+      </classpath>
+    </sql>
+  </target>
+  <target name="call-loadIntrinsicData">
+    <!-- Run in different JVM, to support HSQLDB embedded mode -->
+    <fork-antCall target="loadIntrinsicData"/>
+  </target>
+  <target name="loadSchemes" depends="loadDataTypes, loadObjectTypes, loadStatusTypes, loadEventTypes, loadStabilityTypes, loadNodeTypes, loadNotificationOptionTypes, loadDeletionScopeTypes, loadResponseStatusTypes, loadErrorSeverityTypes, loadAssocTypes, loadPhoneTypes, loadEmailTypes, loadSubjectRoles, loadSubjectGroups, loadCMS, loadErrorHandlingModels, loadInvocationModels, loadQueryLangs">
+    <!-- Loads the canonical schemes as defined by the ebXML Registry specifications -->
+  </target>
+
+  <!-- Used to call SOAPSender target from an external Ant file that does
+       not import omar build*.xml files -->
+  <target name="callSOAPSender">
+    <soapSender req="${soapSender.request}"/>
+  </target>
+
+  <!-- Used to call SOAPSender target with parameters from an external Ant
+       file that does not import omar build*.xml files -->
+  <target name="callSOAPSenderWithParms">
+    <soapSender req="${soapSender.request}"
+            alias="${alias}"
+            keyPassword="${keyPassword}"
+            localCall="${localCall}"
+            res="${response}">
+        <arg value="${attachArgs}"/>
+    </soapSender>
+  </target>
+
+  <macrodef name="soapSender">
+    <attribute name="req"/>
+    <attribute name="alias" default="RegistryOperator"/>
+    <!--
+    For predefined users, keyPassword may be an empty string and SOAPSender will figure it out.
+    For all other users, it MUST be set to the valid keyPassword matching the alias in keyStore.
+    -->
+    <attribute name="keyPassword" default=""/>
+    <attribute name="keyStore" default="${omar.security.keystoreFile}"/>
+    <attribute name="keyStoreType" default="${omar.security.keystoreType}"/>
+    <attribute name="keyStorePassword" default="${omar.security.keystorePassword}"/>
+    <attribute name="localCall" default="${localCall}"/>
+    <attribute name="url" default="${omar.url.soap}"/>
+    <attribute name="res" default="response.xml"/>
+    <attribute name="classpathName" default="server.run.classpath"/>
+    <attribute name="maxmemory" default="256m"/>
+    <attribute name="jvmarg" default=""/>
+    <element name="attachments" optional="true" implicit="true"/>
+    <sequential>
+      <java classname="org.freebxml.omar.server.util.SOAPSender"
+      failonerror="true" fork="true" maxmemory="@{maxmemory}">
+        <jvmarg line="@{jvmarg}"/>
+        <sysproperty key="http.proxyHost" value="${proxyHost}"/>
+        <sysproperty key="http.proxyPort" value="${proxyPort}"/>
+        <sysproperty key="http.nonProxyHosts" value="${nonProxyHosts}"/>
+        <sysproperty key="org.apache.commons.logging.Log" value="${apacheLog}"/>
+        <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+        <arg value="req=@{req}"/>
+        <arg value="alias=@{alias}"/>
+        <arg value="keyPassword=@{keyPassword}"/>
+        <arg value="keyStore=@{keyStore}"/>
+        <arg value="keyStoreType=@{keyStoreType}"/>
+        <arg value="keyStorePassword=@{keyStorePassword}"/>
+        <arg value="localCall=@{localCall}"/>
+        <arg value="url=@{url}"/>
+        <arg value="res=@{res}"/>
+        <attachments/>
+        <classpath refid="@{classpathName}"/>
+      </java>
+    </sequential>
+  </macrodef>
+
+  <target name="loadObjectTypes" depends="i18n.minDB">
+    <echo message="Loading ObjectType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_ObjectTypeScheme.xml"/>
+  </target>
+  <target name="loadDataTypes" depends="i18n.minDB">
+    <echo message="Loading DataType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_DataTypeScheme.xml"/>
+  </target>
+  <target name="loadStatusTypes" depends="i18n.minDB">
+    <echo message="Loading StatusType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_StatusTypeScheme.xml"/>
+  </target>
+  <target name="loadEventTypes" depends="i18n.minDB">
+    <echo message="Loading EventType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_EventTypeScheme.xml"/>
+  </target>
+  <target name="loadStabilityTypes" depends="i18n.minDB">
+    <echo message="Loading StabilityType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_StabilityTypeScheme.xml"/>
+  </target>
+  <target name="loadNodeTypes" depends="i18n.minDB">
+    <echo message="Loading NodeType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_NodeTypeScheme.xml"/>
+  </target>
+  <target name="loadNotificationOptionTypes" depends="i18n.minDB">
+    <echo message="Loading NotificationOptionType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_NotificationOptionTypeScheme.xml"/>
+  </target>
+  <target name="loadDeletionScopeTypes" depends="i18n.minDB">
+    <echo message="Loading DeletionScopeType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_DeletionScopeTypeScheme.xml"/>
+  </target>
+  <target name="loadResponseStatusTypes" depends="i18n.minDB">
+    <echo message="Loading ResponseStatusType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_ResponseStatusTypeScheme.xml"/>
+  </target>
+  <target name="loadErrorSeverityTypes" depends="i18n.minDB">
+    <echo message="Loading ErrorSeverityType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_ErrorSeverityTypeScheme.xml"/>
+  </target>
+  <target name="loadAssocTypes" depends="i18n.minDB">
+    <echo message="Loading AssociationType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_AssociationTypeScheme.xml"/>
+  </target>
+  <target name="loadPhoneTypes" depends="i18n.minDB">
+    <echo message="Loading PhoneType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_PhoneTypeScheme.xml"/>
+  </target>
+  <target name="loadEmailTypes" depends="i18n.minDB">
+    <echo message="Loading EmailType taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_EmailTypeScheme.xml"/>
+  </target>
+  <target name="loadSubjectRoles" depends="i18n.minDB">
+    <echo message="Loading SubjectRole taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_SubjectRoleScheme.xml"/>
+  </target>
+  <target name="loadSubjectGroups" depends="i18n.minDB">
+    <echo message="Loading SubjectGroup taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_SubjectGroupScheme.xml"/>
+  </target>
+  <target name="loadCMS" depends="i18n.minDB">
+    <echo message="Loading ContentManagementService taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_CMSScheme.xml"/>
+  </target>
+  <target name="loadErrorHandlingModels" depends="i18n.minDB">
+    <echo message="Loading ErrorHandlingModel taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_ErrorHandlingModelScheme.xml"/>
+  </target>
+  <target name="loadInvocationModels" depends="i18n.minDB">
+    <echo message="Loading InvocationModel taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_InvocationModelScheme.xml"/>
+  </target>
+  <target name="loadQueryLangs" depends="i18n.minDB">
+    <echo message="Loading QueryLanguage taxonomy as RegistryOperator"/>
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_QueryLangScheme.xml"/>
+  </target>
+  <target name="loadConfig" depends="i18n.minDB">
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_Config.xml">
+      <arg value="attach=${samples}/acp/defaultACP.xml,text/xml,urn:oasis:names:tc:ebxml-regrep:acp:defaultACP"/>
+      <arg value="attach=${samples}/acp/adminOnlyFolderACP.xml,text/xml,urn:oasis:names:tc:ebxml-regrep:acp:adminOnlyACP"/>
+      <arg value="attach=${samples}/minDB/notificationToHTML.xsl,text/xml,urn:freebxml:registry:xslt:notificationToHTML.xsl"/>
+    </soapSender>
+  </target>
+  <target name="loadXSLT" depends="i18n.minDB">
+    <soapSender req="${build.samples}/minDB/SubmitObjectsRequest_XSLT.xml">
+      <arg value="attach=${build.samples}/minDB/Common.xsl,text/xml,urn:uuid:82239fb0-c075-44e3-ac37-a8ea69383907"/>
+      <arg value="attach=${build.samples}/minDB/RegistryObject.xsl,text/xml,urn:uuid:0f4e8307-b208-4e91-97b6-aadd0134e3cd"/>
+      <arg value="attach=${build.samples}/minDB/RegistryEntry.xsl,text/xml,urn:uuid:326a388d-d467-4f91-a31a-9da8c1a39cef"/>
+      <arg value="attach=${build.samples}/minDB/Service.xsl,text/xml,urn:uuid:64275ff5-e943-491f-b1ad-f1242a9dd023"/>
+      <arg value="attach=${build.samples}/minDB/ServiceBinding.xsl,text/xml,urn:uuid:8b7886ee-69eb-48a6-a254-830227cdcfc5"/>
+    </soapSender>
+  </target>
+
+  <!-- ======================================================== -->
+  <!-- Target to localize minDB                                 -->
+  <!-- ======================================================== -->
+
+  <target name="i18n.minDB" depends="jar.common">
+    <property name="minDB.i18n.dir" location="${build.samples}/minDB"/>
+    <delete dir="${minDB.i18n.dir}"/>
+    <mkdir dir="${minDB.i18n.dir}"/>
+    <java classname="org.freebxml.omar.common.I18nXSLTTask"
+      fork="true" failonerror="true">
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <classpath>
+        <path refid="jaxr.client.compile.classpath"/>
+        <pathelement location="${src.resources}"/>
+      </classpath>
+      <arg value="-xsltFile"/>
+      <arg value="${src.xml}/org/freebxml/omar/common/I18n-rim.xsl"/>
+      <arg value="-sourceDir"/>
+      <arg value="${samples}/minDB"/>
+      <arg value="-destDir"/>
+      <arg value="${minDB.i18n.dir}"/>
+      <arg value="-bundleBaseName"/>
+      <arg value="misc.samples.minDB.ResourceBundle"/>
+      <arg value="-localeList"/>
+      <arg value="${localeList}"/>
+    </java>
+    <!-- Manually copy other files than *.xml -->
+    <copy todir="${minDB.i18n.dir}">
+      <fileset dir="${samples}/minDB">
+        <include name="*"/>
+        <exclude name="*.xml"/>
+      </fileset>
+    </copy>
+  </target>
+
+</project>

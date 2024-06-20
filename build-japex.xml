@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-japex.xml,v 1.10 2006/06/09 23:24:52 dougb62 Exp $-->
+<project basedir="." default="dummy" name="omar-build-japex">
+
+  <!-- Make sure to define JAPEX_HOME -->
+  <property name="japex.home" value="${user.home}/japex"/>
+  <property name="japex.workspace.optimized" value="."/>
+  <property name="japex.workspace.unOptimized" value="../../osws-clean/omar"/>
+  <property name="japex.omarName.optimized" value="${omar.name}"/>
+  <property name="japex.omarName.unOptimized" value="omar"/>
+  <property name="japex.server.url.optimized" value="http://localhost:9090/omar/registry/soap"/>
+  <property name="japex.server.url.unOptimized" value="http://localhost:8080/omar/registry/soap"/>
+
+
+  <!-- Edit these properties based on your setup -->
+  <property name="config" value="${basedir}/test/org/freebxml/omar/japex/config.xml"/>
+  <!-- End of properties section -->
+
+  <!--
+    -  Japex properties default values - Note that Japex will
+    -  ignore any property whose value is empty.
+  -->
+  <property name="japex.runsPerDriver" value="2"/>
+  <property name="japex.warmupTime" value=""/>
+  <property name="japex.warmupIterations" value="5"/>
+  <property name="japex.includeWarmupRun" value=""/>
+  <property name="japex.runTime" value=""/>
+  <property name="japex.runIterations" value="3"/>
+  <property name="japex.numberOfThreads" value="1"/>
+
+  <property name="japex.reportsDirectory" value="${basedir}/reports/non-periodic"/>
+  <property name="japex.resultUnit" value="tps"/>
+  <property name="japex.chartType" value="barchart"/>
+
+  <!-- include the supporting classes like apache libs for xwss etc and jaxpex classes -->
+  <path id="japex.client.classpath">
+    <!-- include the compiled japex supporting classes -->
+    <!--For japex src dist>
+    <fileset dir="${japex.home}/dist/lib" includes="*.jar"/-->
+    <!--For japex binary dist-->
+    <fileset dir="${japex.home}/lib" includes="*.jar"/>
+    <fileset dir="${basedir}/misc/lib" includes="*.jar"/>
+    <fileset dir="${basedir}/build/lib" includes="*.jar" />
+    <pathelement location="${basedir}/build/lib/classes" />
+    <pathelement location="${basedir}/build/test/classes" />
+  </path>
+
+
+  <path id="japex.run.classpath">
+    <path refid="japex.client.classpath"/>
+    <!-- include the compiled driver classes -->
+    <pathelement location="${build.home}/classes"/>
+    <pathelement location="${basedir}/build/lib/classes" />
+    <pathelement location="${basedir}/build/test/classes" />
+  </path>
+
+  <target name="japex.syncWorkspaces" description="Synchronizes unoptimized and optimized workspaces.">
+    <!-- Copy client keystore from unoptimized to optimized workspace -->
+    <copy overwrite="true" file="${user.home}/${japex.omarName.unOptimized}/${dist.version}/jaxr-ebxml/security/keystore.jks"
+	  tofile="${user.home}/${japex.omarName.optimized}/${dist.version}/jaxr-ebxml/security/keystore.jks"/>
+    <!-- Copy server keystore from unoptimized to optimized workspace -->
+    <copy overwrite="true"
+        toDir="${user.home}/${japex.omarName.optimized}/${dist.version}/data/security">
+        <fileset dir="${user.home}/${japex.omarName.unOptimized}/${dist.version}/data/security">
+            <include name="**/*.jks" />
+        </fileset>
+    </copy>
+
+    <!-- Delete server database in optimized workspace before copying database from unOptimized workspace -->
+    <delete includeemptydirs="true">
+        <fileset dir="${user.home}/${japex.omarName.optimized}/${dist.version}/data/registry/${japex.omarName.optimized}" includes="**/*"/>
+    </delete>
+
+
+    <!-- Copy server database from unoptimized to optimized workspace -->
+    <copy overwrite="true"
+        toDir="${user.home}/${japex.omarName.optimized}/${dist.version}/data/registry/${japex.omarName.optimized}">
+        <fileset dir="${user.home}/${japex.omarName.unOptimized}/${dist.version}/data/registry/${japex.omarName.unOptimized}">
+            <include name="**/*" />
+        </fileset>
+    </copy>
+  </target>
+
+  <target name="run.japex" description="Runs the japex test harness main program.">
+    <java dir="." fork="true" classname="com.sun.japex.Japex">
+       <jvmarg value="-Xbootclasspath/p:${libs.xmldsig.jar}"/>
+       <jvmarg value="-Xbootclasspath/p:${libs.xmlsec.jar}"/>
+       <jvmarg value="-server"/>
+       <jvmarg value="-Xms512M"/>
+       <jvmarg value="-Xmx512M"/>
+       <sysproperty key="japex.home"
+		    value="${japex.home}"/>
+       <sysproperty key="japex.runsPerDriver"
+		    value="${japex.runsPerDriver}"/>
+       <sysproperty key="japex.warmupTime"
+		    value="${japex.warmupTime}"/>
+       <sysproperty key="japex.warmupIterations"
+		    value="${japex.warmupIterations}"/>
+       <sysproperty key="japex.includeWarmupRun"
+		    value="${japex.includeWarmupRun}"/>
+       <sysproperty key="japex.runTime"
+		    value="${japex.runTime}"/>
+       <sysproperty key="japex.runIterations"
+		    value="${japex.runIterations}"/>
+       <sysproperty key="japex.numberOfThreads"
+		    value="${japex.numberOfThreads}"/>
+       <sysproperty key="japex.reportsDirectory"
+		    value="${japex.reportsDirectory}"/>
+       <sysproperty key="japex.resultUnit"
+		    value="${japex.resultUnit}"/>
+       <sysproperty key="japex.chartType"
+		    value="${japex.chartType}"/>
+       <sysproperty key="japex.workspace.optimized"
+		    value="${japex.workspace.optimized}"/>
+       <sysproperty key="japex.workspace.unOptimized"
+		    value="${japex.workspace.unOptimized}"/>
+       <sysproperty key="japex.server.url.optimized"
+		    value="${japex.server.url.optimized}"/>
+       <sysproperty key="japex.server.url.unOptimized"
+		    value="${japex.server.url.unOptimized}"/>
+
+       <classpath refid="japex.run.classpath"/>
+       <arg value="-verbose"/>
+       <arg value="${config}/"/>
+     </java>
+  </target>
+
+  <target name="generate-trends">
+    <!-- Base64SunDriver -->
+    <java dir="." fork="true" classname="com.sun.japex.TrendReport">
+       <classpath refid="japex.run.classpath"/>
+       <arg value="-overwrite"/>
+       <arg value="Means Trend"/>
+       <arg value="./reports/1-thread-http"/>
+       <arg value="./reports/1-thread-http/trends/Base64SunDriver"/>
+       <arg value="today"/>
+       <arg value="-1Y"/>
+       <arg value="Base64SunDriver"/>
+    </java>
+    <java dir="." fork="true" classname="com.sun.japex.TrendReport">
+       <classpath refid="japex.run.classpath"/>
+       <arg value="Per Test Trend"/>
+       <arg value="./reports/1-thread-http"/>
+       <arg value="./reports/1-thread-http/trends/Base64SunDriver"/>
+       <arg value="today"/>
+       <arg value="-1Y"/>
+       <arg value="Base64SunDriver"/>
+       <arg value="encode"/>
+       <arg value="decode"/>
+    </java>
+  </target>
+</project>

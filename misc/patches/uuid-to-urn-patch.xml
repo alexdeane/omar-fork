@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="uuid-to-urn-patch" default="replace.urns" basedir=".">
+  <!-- $Header: /cvsroot/ebxmlrr/omar/misc/patches/uuid-to-urn-patch.xml,v 1.3 2005/03/06 16:38:28 doballve Exp $ -->
+
+  <description>
+    Replaces known UUIDs with more human friendly URNs.
+    
+    It can be used to fix source code (.java, .jsp, etc) or a database dump. in case you
+    have old content that has to be fixed.
+
+    USAGE:
+      ant -file path_to_omar/misc/patches/uuid-to-urn-patch.xml -Dreplace.root.dir=path_to_dir
+      
+      This will recursively replace any occurrences of the UUIDs specified below with the
+      corresponding new URN (except for .zip/.jar files).
+      
+      
+    As much as I tried to make this list complete, there might still be some UUIDs missing
+    here, and you might want to use this script to replace your own UUIDs. In those cases,
+    just add more 'replacefilter' to the end of the list, following the UUID -> URN pattern.
+    
+    If you replace user lids then you'll probably have to regenerate keyEntry/trustedCertEntry
+    to server keystore.
+  </description>
+  
+  <target name="replace.urns">
+    <fail unless="replace.root.dir" message="Usage: ant replace.urns -Dreplace.root.dir=dir_with_text_files"/>
+
+    <replace dir="${replace.root.dir}" description="Replaces known UUIDs with more human friendly URNs">
+      <exclude name="**/*.jar"/>
+      <exclude name="**/*.zip"/>
+      <exclude name="**/*.jks"/>
+
+      <!-- Canonical association types -->
+      <replacefilter token="urn:uuid:44bc7776-a7d1-4fb5-88d5-c636c4c4dc09" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:AffiliatedWith"/>
+      <replacefilter token="urn:uuid:dec2c00e-0114-436d-a836-fab45afddc3f" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:AffiliatedWith:EmployeeOf"/>
+      <replacefilter token="urn:uuid:2c0f187f-9f87-489c-a936-ac59643845e7" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:AffiliatedWith:MemberOf"/>
+      <replacefilter token="urn:uuid:7aad31a7-501e-4cbc-ac37-ddc44fdf3e1a" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:RelatedTo"/>
+      <replacefilter token="urn:uuid:13ee5ce0-0843-4153-8199-8a7e0b2ecef3" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:HasFederationMember"/>
+      <replacefilter token="urn:uuid:2d03bffb-f426-4830-8413-bab8537a995b" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:HasMember"/>
+      <replacefilter token="urn:uuid:92d03292-84a0-4b86-8139-dd244173ddbb" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:ExternallyLinks"/>
+      <replacefilter token="urn:uuid:fc158238-96bd-41f4-8ac0-b8953c071b41" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:Contains"/>
+      <replacefilter token="urn:uuid:9e662e80-8b5c-48c3-b39b-995fd00c48e4" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:EquivalentTo"/>
+      <replacefilter token="urn:uuid:7ca2c718-3bf6-4f6f-9570-c619e52c6443" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:Extends"/>
+      <replacefilter token="urn:uuid:6e12e663-e525-4518-8700-884ca6c5c6aa" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:Implements"/>
+      <replacefilter token="urn:uuid:4dbd5404-f720-44fe-8298-e1ba462c5f2d" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:InstanceOf"/>
+      <replacefilter token="urn:uuid:d6babbf7-7911-417e-8e6c-c8a7e6f6ada1" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:Supersedes"/>
+      <replacefilter token="urn:uuid:fa0282a3-1b6c-41a3-aa2c-bbd1c432e1ec" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:Uses"/>
+      <replacefilter token="urn:uuid:efeda5e9-57ff-4f62-82f5-aa5be40385f9" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:Replaces"/>
+      <replacefilter token="urn:uuid:ed22135f-fab8-4492-8c85-b84a914f1038" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:SubmitterOf"/>
+      <replacefilter token="urn:uuid:1ae4a444-282f-4385-8b4a-a5ccf73d6aea" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:ResponsibleFor"/>
+      <replacefilter token="urn:uuid:7942ea51-2b0b-4798-a15d-b9528e48342e" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:OffersService"/>
+      <replacefilter token="urn:uuid:7931e965-ac48-442a-93db-b5ca0c49929d" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:ContentManagementServiceFor"/>
+      <replacefilter token="urn:uuid:261ab741-57f4-4fd5-86ee-a15311ec3213" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:InvocationControlFileFor"/>
+      <replacefilter token="urn:uuid:331b2592-d210-4c33-83eb-b41835c8cdb6" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:InvocationControlFileFor:ValidationControlFileFor"/>
+      <replacefilter token="urn:uuid:2c473919-5d93-44c7-ab15-868b70bdb0d5" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:InvocationControlFileFor:CatalogingControlFileFor"/>
+      <replacefilter token="urn:uuid:375c8977-d54e-4e81-bebf-d87e509c9c78" value="urn:oasis:names:tc:ebxml-regrep:AssociationType:AccessControlPolicyFor"/>
+
+      <!-- Canonical ObjectTypes -->
+      <replacefilter token="urn:uuid:a7ec3db9-9342-4016-820c-cff66c0bb021" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject"/>
+      <replacefilter token="urn:uuid:ccac6140-ce43-4d83-b067-f44d303f7c4c" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:AdhocQuery"/>
+      <replacefilter token="urn:uuid:69399ff8-ca2c-4637-baf0-a157b2466b90" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Association"/>
+      <replacefilter token="urn:uuid:1945f7e4-cf24-44fd-bbff-cd3d98e78674" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:AuditableEvent"/>
+      <replacefilter token="urn:uuid:65e731a8-3325-4ac5-bd95-d71a277e3216" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Classification"/>
+      <replacefilter token="urn:uuid:247edbdb-31e8-40bc-97bd-fd60497deabb" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ClassificationNode"/>
+      <replacefilter token="urn:uuid:c8b3dd77-9290-4fa3-a01a-94514d8f89ee" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ClassificationScheme"/>
+      <replacefilter token="urn:uuid:8280e1b1-84ac-4bca-a0ee-8d7ffe2f2333" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExternalIdentifier"/>
+      <replacefilter token="urn:uuid:9c442a04-8eb6-4595-82c4-d4f96d001409" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExternalLink"/>
+      <replacefilter token="urn:uuid:baa2e6c8-873e-4624-8f2d-b9c7230eb4f8" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject"/>
+      <replacefilter token="urn:uuid:e21b23a1-e34b-4fc1-b878-a73f5598c74b" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Federation"/>
+      <replacefilter token="urn:uuid:db85d1a7-2563-4097-8437-d6de4a2f6bab" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Notification"/>
+      <replacefilter token="urn:uuid:c7219bab-f78f-4340-b02a-e493617c6952" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Organization"/>
+      <replacefilter token="urn:uuid:f0271d46-528e-42e7-b46a-8b5d99c60001" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Person"/>
+      <replacefilter token="urn:uuid:52b8100a-01ff-4e30-a326-8905e438ca4f" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Registry"/>
+      <replacefilter token="urn:uuid:ca61fbb7-80b2-40d3-95df-b0b9e2694c2a" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:RegistryPackage"/>
+      <replacefilter token="urn:uuid:52fc5536-c38f-4e89-b661-9664fa1f592f" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Service"/>
+      <replacefilter token="urn:uuid:3495faba-e699-411a-acfd-efecabc9ef48" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ServiceBinding"/>
+      <replacefilter token="urn:uuid:124b974f-503e-4f40-9223-91e161631eb8" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:SpecificationLink"/>
+      <replacefilter token="urn:uuid:a5fab058-55de-4c9b-9263-9c5de09112f1" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Subscription"/>
+      <replacefilter token="urn:uuid:6d07b299-10e7-408f-843d-bb2bc913bfbb" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:Person:User"/>
+      <replacefilter token="urn:uuid:3cbbccd3-a482-4dc2-8940-c6d182b3172a" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject:XACML"/>
+      <replacefilter token="urn:uuid:832d1ba8-2c56-4f29-a49d-d10b0bd8f920" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject:XACML:Policy"/>
+      <replacefilter token="urn:uuid:7c50351e-0022-4a65-950c-ac8cda6f3e0b" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject:XACML:PolicySet"/>
+      <replacefilter token="urn:uuid:4a13dacb-a9e8-4819-bd1a-faf50976e5d4" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject:XML"/>
+      <replacefilter token="urn:uuid:32bbb291-0291-486d-a80d-cdd6cd625c57" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject:XSLT"/>
+      <replacefilter token="urn:uuid:41c61205-3e19-46b5-b463-f8140090bd99" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject:XMLSchema"/>
+      <replacefilter token="urn:uuid:c67a401f-6236-4c2f-afec-bb06ee311226" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject:XHTML"/>
+      <replacefilter token="urn:uuid:1f8565fa-2bf4-4b2e-8529-8479b31c530c" value="urn:oasis:names:tc:ebxml-regrep:ObjectType:RegistryObject:ExtrinsicObject:XHTML:XForm"/>
+
+      <!-- Canonical DataTypes -->
+      <replacefilter token="urn:uuid:efa451f7-3c0a-42e2-9331-cc41daf0f1a1" value="urn:oasis:names:tc:ebxml-regrep:DataType:Boolean"/>
+      <replacefilter token="urn:uuid:1ff3f8b8-22b3-4466-8557-8aa161ccbfc1" value="urn:oasis:names:tc:ebxml-regrep:DataType:Date"/>
+      <replacefilter token="urn:uuid:406aef0d-8e42-49c1-9454-e41950d479bc" value="urn:oasis:names:tc:ebxml-regrep:DataType:DateTime"/>
+      <replacefilter token="urn:uuid:40ed78dd-9ab3-4e4b-b31a-a0beac990283" value="urn:oasis:names:tc:ebxml-regrep:DataType:Double"/>
+      <replacefilter token="urn:uuid:ecc7c70f-5d2f-458d-933f-c2969a85cf43" value="urn:oasis:names:tc:ebxml-regrep:DataType:Duration"/>
+      <replacefilter token="urn:uuid:185ae7fd-15f8-42e2-8e81-db8599098ab7" value="urn:oasis:names:tc:ebxml-regrep:DataType:Float"/>
+      <replacefilter token="urn:uuid:8567502c-6f73-4c5d-9bf8-97e551e48ff3" value="urn:oasis:names:tc:ebxml-regrep:DataType:Integer"/>
+      <replacefilter token="urn:uuid:fc4980e9-de82-4007-ba81-8a57f723ae85" value="urn:oasis:names:tc:ebxml-regrep:DataType:ObjectRef"/>
+      <replacefilter token="urn:uuid:d8f6fe30-6eff-400e-a7ff-dcdaf076f130" value="urn:oasis:names:tc:ebxml-regrep:DataType:String"/>
+      <replacefilter token="urn:uuid:0d01e622-1d50-4d91-8b02-ccfaa4d42b04" value="urn:oasis:names:tc:ebxml-regrep:DataType:Time"/>
+      <replacefilter token="urn:uuid:fa86b99c-cf5a-416f-a1f8-a9756e51037f" value="urn:oasis:names:tc:ebxml-regrep:DataType:URI"/>
+
+      <!-- Canonical ContentManagementService types -->
+      <replacefilter token="urn:uuid:bfe64895-37d4-4d18-a776-cbb1dcba52a3" value="urn:oasis:names:tc:ebxml-regrep:ContentManagementService:ContentCatalogingService"/>
+      <replacefilter token="urn:uuid:10bdf716-7dfa-4367-9616-b4747e49fef0" value="urn:oasis:names:tc:ebxml-regrep:ContentManagementService:ContentValidationService"/>
+
+      <!-- Canonical EmailType -->
+      <replacefilter token="urn:uuid:35806661-246f-4efe-b081-bce2f76e9dbe" value="urn:oasis:names:tc:ebxml-regrep:EmailType:OfficeEmail"/>
+      <replacefilter token="urn:uuid:c271bae4-83f6-45c2-a6d8-ca0ff16aef8c" value="urn:oasis:names:tc:ebxml-regrep:EmailType:HomeEmail"/>
+
+      <!-- Canonical eventType -->
+      <replacefilter token="urn:uuid:38a8e94c-eb86-48fa-bd8f-abae641529ef" value="urn:oasis:names:tc:ebxml-regrep:EventType:Approved"/>
+      <replacefilter token="urn:uuid:0a02660b-625c-475b-9887-f22f2ef0bdaa" value="urn:oasis:names:tc:ebxml-regrep:EventType:Created"/>
+      <replacefilter token="urn:uuid:35ee4757-be1a-4200-bc03-d6b2992ddd27" value="urn:oasis:names:tc:ebxml-regrep:EventType:Deleted"/>
+      <replacefilter token="urn:uuid:81b4b0f2-1ecb-432e-8ce7-ae325974901d" value="urn:oasis:names:tc:ebxml-regrep:EventType:Deprecated"/>
+      <replacefilter token="urn:uuid:8c5a1d9d-61b3-48e6-ba6e-aca7b5fe62d1" value="urn:oasis:names:tc:ebxml-regrep:EventType:Downloaded"/>
+      <replacefilter token="urn:uuid:0aee14e4-f9b6-4e0b-bd9f-f7bf10164b27" value="urn:oasis:names:tc:ebxml-regrep:EventType:Relocated"/>
+      <replacefilter token="urn:uuid:1d415a65-d94a-4f4f-aa25-ac7d97b8d634" value="urn:oasis:names:tc:ebxml-regrep:EventType:Undeprecated"/>
+      <replacefilter token="urn:uuid:d018e714-71ae-4161-8507-a558fee3d124" value="urn:oasis:names:tc:ebxml-regrep:EventType:Updated"/>
+      <replacefilter token="urn:uuid:93831404-651d-40bc-b4a8-83abfa0b5a12" value="urn:oasis:names:tc:ebxml-regrep:EventType:Versioned"/>
+
+      <!-- Canonical statusType -->
+      <replacefilter token="urn:uuid:eb658dda-f856-430a-bba7-b57437ee30aa" value="urn:oasis:names:tc:ebxml-regrep:StatusType:Approved"/>
+      <replacefilter token="urn:uuid:b64a6a22-10ef-40e6-be58-d7090233fd1b" value="urn:oasis:names:tc:ebxml-regrep:StatusType:Deprecated"/>
+      <replacefilter token="urn:uuid:37d17f1b-3245-425b-988d-e0d98200a146" value="urn:oasis:names:tc:ebxml-regrep:StatusType:Submitted"/>
+      <replacefilter token="urn:uuid:bda49e85-514e-4ab0-925e-93d5e4cd4f1b" value="urn:oasis:names:tc:ebxml-regrep:StatusType:Withdrawn"/>
+
+      <!-- Canonical stabilityType -->
+      <replacefilter token="urn:uuid:8ed0e5d3-6682-4310-a2de-ac069d139c6b" value="urn:oasis:names:tc:ebxml-regrep:StabilityType:Dynamic"/>
+      <replacefilter token="urn:uuid:2b130dd8-7618-4dc9-8aac-dd0a41d9547c" value="urn:oasis:names:tc:ebxml-regrep:StabilityType:DynamicCompatible"/>
+      <replacefilter token="urn:uuid:c5e920f7-a7f8-4451-931a-b5f2f2b85db7" value="urn:oasis:names:tc:ebxml-regrep:StabilityType:Static"/>
+
+      <!-- Canonical nodeType -->
+      <replacefilter token="urn:uuid:bd0c092a-cb38-4578-8520-81274054f678" value="urn:oasis:names:tc:ebxml-regrep:NodeType:UniqueCode"/>
+      <replacefilter token="urn:uuid:43c57c44-80e8-40ce-bac7-ee79427a3dd4" value="urn:oasis:names:tc:ebxml-regrep:NodeType:EmbeddedPath"/>
+      <replacefilter token="urn:uuid:1f10e2ba-3d5a-4c28-a604-ae21bafa143b" value="urn:oasis:names:tc:ebxml-regrep:NodeType:NonUniqueCode"/>
+
+      <!-- Canonical PhoneType -->
+      <replacefilter token="urn:uuid:06c99e31-b60c-4ec1-b355-cd450a6d9083" value="urn:oasis:names:tc:ebxml-regrep:PhoneType:OfficePhone"/>
+      <replacefilter token="urn:uuid:6092c4af-346a-4cb6-b31e-cfc5987fba60" value="urn:oasis:names:tc:ebxml-regrep:PhoneType:HomePhone"/>
+      <replacefilter token="urn:uuid:d60c3bff-c481-4c36-95eb-f2caddf34438" value="urn:oasis:names:tc:ebxml-regrep:PhoneType:MobilePhone"/>
+      <replacefilter token="urn:uuid:dc37e328-2676-497c-85d7-87337b92c4b9" value="urn:oasis:names:tc:ebxml-regrep:PhoneType:Beeper"/>
+      <replacefilter token="urn:uuid:daa06182-0175-49ed-8d45-e0243a0fe2b2" value="urn:oasis:names:tc:ebxml-regrep:PhoneType:FAX"/>
+            
+      <!-- Canonical notificationOptionTypes -->
+      <replacefilter token="urn:uuid:82c48f21-9eb3-47f7-9da8-f37951a625e1" value="urn:oasis:names:tc:ebxml-regrep:NotificationOptionType:ObjectRefs"/>
+      <replacefilter token="urn:uuid:84005f6d-419e-4138-a789-fb9fecb88f44" value="urn:oasis:names:tc:ebxml-regrep:NotificationOptionType:Objects"/>
+
+      <!-- Canonical deletionScopeTypes -->
+      <replacefilter token="urn:uuid:15e9500a-1887-4e86-a177-f85f0dde3d3d" value="urn:oasis:names:tc:ebxml-regrep:DeletionScopeType:DeleteAll"/>
+      <replacefilter token="urn:uuid:f66a3be1-0fc6-4b01-b2c7-dffeac396af7" value="urn:oasis:names:tc:ebxml-regrep:DeletionScopeType:DeleteRepositoryItemOnly"/>
+
+      <!-- Canonical ResponseStatusType -->
+      <replacefilter token="urn:uuid:e4aa6743-e9f3-4b69-894e-b1faadbf10f3" value="urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Success"/>
+      <replacefilter token="urn:uuid:db2127df-e8d0-4e43-8d80-8eee6962ef64" value="urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Failure"/>
+      <replacefilter token="urn:uuid:0dba3c48-e771-4bab-a3b3-d7d7f21ee116" value="urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Unavailable"/>
+
+      <!-- Canonical ErrorHandlingModel -->
+      <replacefilter token="urn:uuid:112e3809-65b4-41b4-a8c5-e08756385c6d" value="urn:oasis:names:tc:ebxml-regrep:ErrorHandlingModel:FailOnError"/>
+      <replacefilter token="urn:uuid:a2dd1036-8e0d-4cdb-bc1b-88fcf3c2542a" value="urn:oasis:names:tc:ebxml-regrep:ErrorHandlingModel:LogErrorAndContinue"/>
+
+      <!-- Canonical ErrorSeverityType -->
+      <replacefilter token="urn:uuid:84ed7a8c-f3bb-42f8-848d-c3361d264e77" value="urn:oasis:names:tc:ebxml-regrep:ErrorSeverityType:Warning"/>
+      <replacefilter token="urn:uuid:f76d7d42-de2e-4181-8237-93080cef1540" value="urn:oasis:names:tc:ebxml-regrep:ErrorSeverityType:Error"/>
+
+      <!-- Canonical InvocationModel -->
+      <!-- ?? replacefilter token="urn:uuid:1365e3f7-9899-4647-bc0f-ea2ccf5144b7" value="urn:oasis:names:tc:ebxml-regrep:InvocationModel:Inline"/-->
+      <replacefilter token="urn:uuid:247edbdb-31e8-40bc-97bd-fd60497deabb" value="urn:oasis:names:tc:ebxml-regrep:InvocationModel:Inline"/>
+      <replacefilter token="urn:uuid:6e7b1001-df34-4e8d-8065-abf3cfb445bb" value="urn:oasis:names:tc:ebxml-regrep:InvocationModel:Decoupled"/>
+
+      <!-- Canonical QueryLanguage types -->
+      <replacefilter token="urn:uuid:c26215e8-7732-4c7f-8b04-bd8115c325e9" value="urn:oasis:names:tc:ebxml-regrep:QueryLanguage:SQL-92"/>
+      <replacefilter token="urn:uuid:55a950c7-c962-4fae-86d4-c935980f2749" value="urn:oasis:names:tc:ebxml-regrep:QueryLanguage:ebRSFilterQuery"/>
+      <replacefilter token="urn:uuid:4b904842-5bf0-4359-aecc-fb8cb15773cb" value="urn:oasis:names:tc:ebxml-regrep:QueryLanguage:XQuery"/>
+      <replacefilter token="urn:uuid:6f3e5434-c2da-412a-bb02-ac9062e1e4a1" value="urn:oasis:names:tc:ebxml-regrep:QueryLanguage:XPath"/>
+
+      <!-- Users -->
+      <replacefilter token="urn:uuid:921284f0-bbed-4a4c-9342-ecaf0625f9d7" value="urn:freebxml:registry:predefinedusers:registryoperator"/>
+      <replacefilter token="urn:uuid:abfa78d5-605e-4dbc-b9ee-a42e99d5f7cf" value="urn:freebxml:registry:predefinedusers:registryguest"/>
+      <replacefilter token="urn:uuid:977d9380-00e2-4ce8-9cdc-d8bf6a4157be" value="urn:freebxml:registry:predefinedusers:farrukh"/>
+      <replacefilter token="urn:uuid:85428d8e-1bd5-473b-a8c8-b9d595f82728" value="urn:freebxml:registry:predefinedusers:nikola"/>
+
+      <!-- Organizations -->
+      <replacefilter token="urn:uuid:388678e9-40df-4412-ac65-c42bbb265e7d" value="urn:freebxml:registry:Organization:freebXMLRegistry"/>
+
+      <!-- Subject Roles -->
+      <replacefilter token="urn:uuid:e1b51d43-c9b5-43a2-acb3-d727e080e130" value="urn:oasis:names:tc:ebxml-regrep:SubjectRole:ContentOwner"/>
+      <replacefilter token="urn:uuid:970eeed9-1e58-4e97-bd82-eff3651998c2" value="urn:oasis:names:tc:ebxml-regrep:SubjectRole:RegistryAdministrator"/>
+      <replacefilter token="urn:uuid:da76dd4e-3f00-4aef-8ccb-bb4ff6676413" value="urn:oasis:names:tc:ebxml-regrep:SubjectRole:RegistryGuest"/>
+
+      <!-- Queries -->
+      <replacefilter token="urn:uuid:25cf46c6-6f20-473f-963d-8033df2ae2f3" value="urn:oasis:names:tc:ebxml-regrep:query:FindAllMyObjects"/>
+      <replacefilter token="urn:uuid:41407b86-6059-4b6c-b1cc-accf19e9703c" value="urn:oasis:names:tc:ebxml-regrep:query:GetCallersUser"/>
+      <replacefilter token="urn:uuid:2a73c05b-5810-461f-9177-862503479f6e" value="urn:oasis:names:tc:ebxml-regrep:query:RegistryObjectVersionQuery"/>
+      <replacefilter token="urn:uuid:289cf12e-4b62-4692-9803-f075af775e1f" value="urn:oasis:names:tc:ebxml-regrep:query:ExtrinsicObjectVersionQuery"/>
+      <replacefilter token="urn:uuid:d242d228-eba7-43e0-91ce-88aacbcc167c" value="urn:freebxml:registry:query:BusinessQuery"/>
+      <replacefilter token="urn:uuid:5b307710-581b-4cbb-afb4-f29d56666a6b" value="urn:freebxml:registry:query:BusinessQueryCaseSensitive"/>
+      <replacefilter token="urn:uuid:7a022f7f-dc03-4efb-aff6-af1caea8f2fa" value="urn:oasis:names:tc:ebxml-regrep:query:ArbitraryQuery"/>
+
+      <!-- Classification Schemes -->
+      <replacefilter token="urn:uuid:6902675f-2f18-44b8-888b-c91db8b96b4d" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:AssociationType"/>
+      <replacefilter token="urn:uuid:124268df-dca8-4681-83cf-9b98acc5965b" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:ContentManagementService"/>
+      <replacefilter token="urn:uuid:2de73f00-b2e6-435f-83c1-d6f840ae93fa" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:DataType"/>
+      <replacefilter token="urn:uuid:e1d93c79-ba93-4b72-96c3-ef0e07ef48c3" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:DeletionScopeType"/>
+      <replacefilter token="urn:uuid:09ac70b4-b314-454a-a512-c16cf4430ef6" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:EmailType"/>
+      <replacefilter token="urn:uuid:e0fa634c-6c06-4036-9f65-c1a466f8b070" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:ErrorHandlingModel"/>
+      <replacefilter token="urn:uuid:22fba505-d998-4ec0-a266-cf3bf687076a" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:ErrorSeverityType"/>
+      <replacefilter token="urn:uuid:37fbd29e-15c9-4926-9fb3-f249d0fd00e2" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:EventType"/>
+      <replacefilter token="urn:uuid:b6b066c2-54ac-4ecd-ab41-d39b9649866e" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:InvocationModel"/>
+      <replacefilter token="urn:uuid:19f9166d-6a92-4fb1-a537-f9075299079b" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:NodeType"/>
+      <replacefilter token="urn:uuid:8f3a0536-8e18-4d07-bd22-efbd952db034" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:NotificationOptionType"/>
+      <replacefilter token="urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:ObjectType"/>
+      <replacefilter token="urn:uuid:de95a42e-a0e3-40a3-abcc-ee6d88492639" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:PhoneType"/>
+      <replacefilter token="urn:uuid:82e8a92c-36ee-4318-807b-8a821f3f9e08" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:QueryLanguage"/>
+      <replacefilter token="urn:uuid:3c74952b-9e0b-4488-8b6e-c6a5c13d89df" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:ResponseStatusType"/>
+      <replacefilter token="urn:uuid:f67f1cd0-f5f9-4c8f-b492-e5310385cdeb" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:StabilityType"/>
+      <replacefilter token="urn:uuid:61081495-ac86-48de-8b65-951aa4ea4a53" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:StatusType"/>
+      <replacefilter token="urn:uuid:7c07beae-c1c6-4a52-b1db-d3cf9b501b75" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:SubjectGroup"/>
+      <replacefilter token="urn:uuid:41ce5ef5-2117-4304-baf5-feb35295c1c1" value="urn:oasis:names:tc:ebxml-regrep:classificationScheme:SubjectRole"/>
+
+      <!-- ACP -->
+      <replacefilter token="urn:uuid:4bcfc370-7a71-4c50-a6ed-ade41d836613" value="urn:oasis:names:tc:ebxml-regrep:Service:CanonicalXMLCatalogingService"/>
+      <replacefilter token="urn:uuid:38aff259-d20c-486f-8907-b4c97d99bdc5" value="urn:oasis:names:tc:ebxml-regrep:acp:defaultACP"/>
+
+      <!-- Folders -->
+      <replacefilter token="urn:uuid:18681ed7-0528-46b1-b454-cd2ad931cf8e" value="urn:freebxml:registry:demoDB:folder1"/>
+
+      <!-- Demo DB Services -->
+      <replacefilter token="urn:uuid:533de3b9-2dd1-49a5-806d-dd3cf2c44bcf" value="urn:freebxml:registry:demoDB:test:cms:ContentCatalogingService:cppaCataloging"/>
+      
+      <!-- Demo DB misc -->
+      <replacefilter token="urn:uuid:8d0b7b54-0dae-427f-9793-868407b74ea9" value="urn:freebxml:registry:demoDB:classificationScheme:NYSETicker"/>
+      <replacefilter token="urn:uuid:7bd5567e-41a0-4f13-88bb-efac33c762fc" value="urn:freebxml:registry:demoDB:classificationScheme:USTaxPeyerId"/>
+      <replacefilter token="urn:uuid:fc9bd8fd-73c4-4d83-8dd6-8a07eec79dda" value="urn:freebxml:registry:demoDB:classificationScheme:DUNS"/>
+      <replacefilter token="urn:uuid:d307741c-f6e7-4dbf-bfbb-dad06214522d" value="urn:freebxml:registry:demoDB:classificationScheme:USSocialSecurityNumber"/>
+    </replace>
+  </target>
+    
+</project>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-demoDB.xml,v 1.27 2007/01/12 21:30:56 farrukh_najmi Exp $-->
+<project basedir="." default="dummy" name="omar-build-demoDB">
+
+<target name="dummy" description="Dummy default target, does nothing"/>
+
+<!-- ========================================================   -->
+<!-- Contains targets related to building demoDB test databases -->
+<!-- ========================================================   -->
+
+  <!-- Demo DB with some vertical specific content. -->
+  <target name="createDemoDB" depends="createMinDB, loadDemoDB">
+    <echo message="Created a demo database"/>
+    <echo message="omar.home: ${omar.home}"/>
+  </target>
+  <target name="loadDemoDB" depends="loadMinDB, loadExtSchemes, loadGeo, loadOrg, loadRoles, loadPicture, loadWSProfile, loadCPPA, loadHL7, loadSubscription, loadCatalogingTest"/>
+  <target name="createTCKDB" depends="createDemoDB, loadTCKAssocExtension, loadTCKObjectTypeExtension, loadURLTypes, loadPostalAddressAttributes, loadNAICS"/>
+  <target name="loadTCKAssocExtension">
+    <echo message="Loading extensions to AssociationType scheme for JAXR TCK."/>
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_AssociationTypeExtension.xml"/>
+  </target>
+  <target name="loadTCKObjectTypeExtension">
+    <echo message="Loading extensions to ObjectTypeType scheme for JAXR TCK."/>
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_ObjectTypeTCKExtension.xml"/>
+  </target>
+  <target name="loadURLTypes">
+    <echo message="Loading URLType taxonomy as RegistryOperator"/>
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_URLTypeScheme.xml"/>
+  </target>
+  <target name="loadPostalAddressAttributes">
+    <echo message="Loading PostalAddressAttribute taxonomy as RegistryOperator"/>
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_PostalAddressAttributes.xml"/>
+  </target>
+  <target name="loadNAICS">
+    <echo message="Loading NAICS taxonomy as RegistryOperator"/>
+    <soapSender req="${samples}/SubmitObjectsRequest_NAICS.xml"/>
+  </target>
+  <target name="loadRoles">
+    <echo message="Loading sample Subject Role data"/>
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_Roles.xml">
+      <arg value="attach=${samples}/acp/folderACP1.xml,text/xml,urn:freebxml:registry:demoDB:acp:folderACP1"/>
+    </soapSender>
+  </target>
+  <target name="loadOrg">
+    <echo message="Loading sample Organization data"/>
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_Organization.xml"/>
+  </target>
+  <target name="loadExtSchemes">
+    <echo message="Loading External Schemes"/>
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_extSchemes.xml"/>
+  </target>
+  <target name="loadPicture">
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_Picture1.xml">
+      <arg value="attach=${samples}/demoDB/Zeus.jpg,image/jpeg,urn:freebxml:registry:demoDB:ExtrinsicObject:zeusDescription"/>
+      <arg value="attach=${samples}/acp/customACP1.xml,text/xml,urn:freebxml:registry:demoDB:acp:customACP1"/>
+    </soapSender>
+  </target>
+  <target name="loadSubscription">
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_Subscription.xml"/>
+  </target>
+  <target name="loadGeo">
+    <echo message="Loading ISO 3166 taxonomy as RegistryOperator"/>
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_ISO3166.xml"/>
+  </target>
+  <target name="loadCPPA" depends="loadSchemes_cppa, loadConfig_cppa, loadData_cppa">
+    <echo message="Loading ebXML CPPA binding"/>
+    <echo message="omar.home: ${omar.home}"/>
+  </target>
+  <target name="loadSchemes_cppa" depends="loadObjectTypes_cppa" >
+    <!-- Loads the extensions to canonical schemes as defined by this domain specific binding to ebXML Registry -->
+  </target>
+  <target name="loadObjectTypes_cppa">
+    <echo message="Extending ObjectTypes for CPPA taxonomy as RegistryOperator"/>
+    <soapSender req="${samples}/cppa/SubmitObjectsRequest_ObjectTypeScheme.xml"/>
+  </target>
+  <target name="loadConfig_cppa">
+    <soapSender req="${samples}/cppa/SubmitObjectsRequest_Config.xml">
+      <arg value="attach=${samples}/cppa/InvocationControlFile_CPP.xsl,text/xml,urn:freebxml:registry:sample:profile:cpp:cms:InvocationControlFile_CPP.xsl"/>
+      <arg value="attach=${samples}/cppa/FilteringControlFile_CPP.xsl,text/xml,urn:freebxml:registry:sample:profile:cpp:cms:FilteringControlFile_CPP.xsl"/>
+    </soapSender>
+  </target>
+  <target name="loadData_cppa">
+    <soapSender req="${samples}/cppa/SubmitObjectsRequest_CPP1ExtrinsicObject.xml">
+      <arg value="attach=${samples}/cppa/CPP1.xml,text/xml,urn:freebxml:registry:sample:profile:cpp:instance:cpp1"/>
+    </soapSender>
+  </target>
+  <target name="loadHL7" depends="loadSchemes_hl7, loadConfig_hl7, loadData_hl7">
+    <echo message="Loading Health Level 7 (HL7) binding"/>
+    <echo message="omar.home: ${omar.home}"/>
+  </target>
+  <target name="loadSchemes_hl7" depends="loadObjectTypes_hl7">
+    <!-- Loads the extensions to canonical schemes as defined by this domain specific binding to ebXML Registry -->
+  </target>
+  <target name="loadObjectTypes_hl7">
+    <echo message="Extending ObjectTypes for HL7 taxonomy as RegistryOperator"/>
+    <soapSender req="${samples}/hl7/SubmitObjectsRequest_ObjectTypeScheme.xml"/>
+  </target>
+  <target name="loadConfig_hl7">
+    <soapSender req="${samples}/hl7/SubmitObjectsRequest_Config.xml">
+      <arg value="attach=${samples}/hl7/InvocationControlFile_HL7CP.xsl,text/xml,urn:uuid:2afc3378-387e-44dc-95a5-d1498de6497a"/>
+    </soapSender>
+  </target>
+  <target name="loadData_hl7">
+    <soapSender req="${samples}/hl7/SubmitObjectsRequest_ConformanceProfile1ExtrinsicObject.xml">
+      <arg value="attach=${samples}/hl7/ConformanceProfile1.xml,text/xml,urn:uuid:82572fbb-841d-4b9b-b3f9-a2c364cd8928"/>
+    </soapSender>
+    <soapSender req="${samples}/hl7/SubmitObjectsRequest_ConformanceProfile2ExtrinsicObject.xml">
+      <arg value="attach=${samples}/hl7/ConformanceProfile2.xml,text/xml,urn:uuid:a4acaca0-4c29-4ce3-afe3-d370eadf1853"/>
+    </soapSender>
+  </target>
+  <target name="loadOAGIS" depends="loadSchemes_oagis, loadConfig_oagis, loadData_oagis">
+    <echo message="Loading Open Application Group (OAG) binding"/>
+    <echo message="omar.home: ${omar.home}"/>
+  </target>
+  <target name="loadSchemes_oagis" depends="loadObjectTypes_oagis">
+    <!-- Loads the extensions to canonical schemes as defined by this domain specific binding to ebXML Registry -->
+  </target>
+  <target name="loadObjectTypes_oagis">
+    <echo message="Extending ObjectTypes for OAGIS taxonomy as RegistryOperator"/>
+    <soapSender req="${samples}/oagis/SubmitObjectsRequest_ObjectTypeScheme.xml"/>
+  </target>
+  <target name="loadConfig_oagis">
+    <soapSender req="${samples}/oagis/SubmitObjectsRequest_Config.xml">
+      <arg value="attach=${samples}/oagis/InvocationControlFile_BOD.xsl,text/xml,urn:uuid:a1137d00-091a-471e-8680-eb75b27b84b6"/>
+    </soapSender>
+  </target>
+  <target name="loadData_oagis">
+    <soapSender req="${samples}/oagis/SubmitObjectsRequest_AcknowledgeDeliveryReceipt1ExtrinsicObject.xml">
+      <arg value="attach=${samples}/oagis/AcknowledgeDeliveryReceipt1.xml,text/xml,eac6870b-5421-4ee3-b275-ca910b887038"/>
+    </soapSender>
+  </target>
+
+  <target name="loadCatalogingTest" depends="loadCatalogingServices, loadObjectTypes_catalogingTest, loadConfig_catalogingTest"/>
+  <target name="loadCatalogingServices">
+    <echo message="Loading test Content Cataloging Services as RegistryOperator"/>
+    <soapSender req="${samples}/cms/catalogingTest/SubmitObjectsRequest_WebServices.xml"/>
+  </target>
+  <target name="loadObjectTypes_catalogingTest">
+    <echo message="Extending ObjectTypes for test XML objects taxonomy as RegistryOperator"/>
+    <soapSender req="${samples}/cms/catalogingTest/SubmitObjectsRequest_ObjectTypeScheme.xml"/>
+  </target>
+  <target name="loadConfig_catalogingTest">
+    <soapSender req="${samples}/cms/catalogingTest/SubmitObjectsRequest_CPPACatalogingConfig.xml">
+      <arg value="attach=${samples}/cppa/InvocationControlFile_CPP.xsl,text/xml,urn:uuid:50ea1df2-5bb8-44c0-8d70-a1e18d84001e"/>
+    </soapSender>
+  </target>
+  <!--This target is used to load Parameterized Adhoc Queries into the database -->
+  <target name="loadAdhocQuery">
+    <echo message="Loading Parameterized AdhocQuery"/>
+    <soapSender req="${samples}/SubmitObjectsRequest_AdhocQuery.xml"/>
+  </target>
+
+</project>

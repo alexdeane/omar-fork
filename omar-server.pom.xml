@@ -1,0 +1,165 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>org.freebxml.omar</groupId>
+        <artifactId>omar-project</artifactId>
+        <version>3.1</version>
+    </parent>
+    
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.freebxml.omar</groupId>
+    <artifactId>omar-server</artifactId>
+    <packaging>jar</packaging>
+    <name>freebXML Registry Project server code</name>
+    <url>http://ebxmlrr.sourceforge.net/</url>
+        
+    
+    <dependencies>
+        <!--Need JAXR provider for federated query support-->
+        <dependency>
+            <groupId>org.freebxml.omar</groupId>
+            <artifactId>jaxr-ebxml</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
+        
+        <!--
+        Need Hibernate for repository implementation.
+        
+        Hibernate and its dependencies since its pom does not declare
+        its dependencies for this version
+        -->
+        <dependency>
+            <!--groupId>hibernate</groupId>
+            <artifactId>hibernate</artifactId>
+            <version>3.0</version-->
+            
+            <groupId>net.sf.hibernate</groupId>
+            <artifactId>hibernate</artifactId>
+            <version>2.1.8</version>
+            
+        </dependency>
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jmock</groupId>
+            <artifactId>jmock-cglib</artifactId>
+            <version>1.0.1</version>
+        </dependency>        
+        <dependency>
+            <groupId>odmg</groupId>
+            <artifactId>odmg</artifactId>
+            <version>3.0</version>
+        </dependency>
+        
+        
+        <!--
+        Need sun-xacml for role based access control using XACML policies.
+        -->
+        <dependency>                
+            <groupId>sun-xacml</groupId>
+            <artifactId>sunxacml</artifactId>
+            <version>1.1</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>concurrent</groupId>
+            <artifactId>concurrent</artifactId>
+            <version>1.3.4</version>
+        </dependency>
+        
+        <!--Used by SQL Processor-->
+        <dependency>
+            <groupId>javacc</groupId>
+            <artifactId>javacc</artifactId>
+            <version>3.2</version>
+        </dependency>
+        
+        
+        <!--Need JAX-RPC for web service event listener invocation-->
+        <dependency>
+            <groupId>javax.xml</groupId>
+            <artifactId>jaxrpc-api</artifactId>
+            <version>1.1</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.sun.xml.rpc</groupId>
+            <artifactId>jaxrpc-impl</artifactId>
+            <version>1.1.3_01</version>
+        </dependency>
+        
+        <!--Web UI dependencies-->
+        <dependency>
+            <groupId>org.freebxml.omar</groupId>
+            <artifactId>omar-ui-conf-bindings</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>javax.faces</groupId>
+            <artifactId>jsf-impl</artifactId>
+            <!--version>1.2-b19</version-->
+            <version>1.1_02</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.faces</groupId>
+            <artifactId>jsf-api</artifactId>
+            <!--version>1.2_02</version-->
+            <version>1.1_02</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-digester</groupId>
+            <artifactId>commons-digester</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.6</version>
+        </dependency>
+        <dependency>
+            <groupId>jstl</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>taglibs</groupId>
+            <artifactId>standard</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jsp-api</artifactId>
+            <version>2.0</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>servletapi</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.4</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        
+    </dependencies>
+    
+</project>

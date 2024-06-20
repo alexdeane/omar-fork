@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/src/java/org/freebxml/omar/common/jaxrpc/cms/cataloging/server/wscompile-config.xml,v 1.1 2004/12/15 15:06:43 tonygraham Exp $-->
+<configuration
+    xmlns="http://java.sun.com/xml/ns/jax-rpc/ri/config">
+    <wsdl
+        location="../ebxmlrr-spec/misc/3.0/services/CatalogingServices.wsdl"
+        packageName="org.freebxml.omar.common.jaxrpc.cms.cataloging.server" />
+</configuration>

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<project default="site:generate"
+  xmlns:j="jelly:core"
+  xmlns:u="jelly:util"
+  xmlns:ant="jelly:ant"
+  xmlns:maven="jelly:maven"
+  xmlns:m="maven"
+  xmlns:deploy="deploy">
+
+  <preGoal name="java:compile">
+    <attainGoal name="javacc"/>
+  </preGoal>
+
+  <goal name="javacc">
+    <javacc target="${pom.build.sourceDirectory}/com/sun/ebxml/registry/query/sql/SQLParser.jj"
+            javacchome="${javacc.home}"
+            debugparser="false"
+            debugtokenmanager="false"
+            errorreporting="true"
+            static="false"/>
+  </goal>
+
+</project>

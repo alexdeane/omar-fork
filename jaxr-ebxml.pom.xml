@@ -1,0 +1,107 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+             
+    <parent>
+        <groupId>org.freebxml.omar</groupId>
+        <artifactId>omar-project</artifactId>
+        <version>3.1</version>
+    </parent>
+             
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.freebxml.omar</groupId>
+    <artifactId>jaxr-ebxml</artifactId>
+    <packaging>jar</packaging>
+    <name>jaxr-ebxml</name>
+    <description>freebXML Registry Project JAXR provider</description>
+    <url>http://ebxmlrr.sourceforge.net/</url>
+    
+    <dependencies>
+        <dependency>
+            <groupId>javax.xml</groupId>
+            <artifactId>jaxr-api</artifactId>
+            <version>1.0_03</version>
+        </dependency>
+                
+        <dependency>
+            <groupId>org.freebxml.omar</groupId>
+            <artifactId>omar-common</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
+        
+        <!--
+        Need JAXB to create and process server requests.
+        
+        JAXB and its dependencies
+        -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>1.0</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jaxb</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>1.0.5</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jaxb</groupId>
+            <artifactId>jaxb-libs</artifactId>
+            <version>1.0.5</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.msv.datatype.xsd</groupId>
+            <artifactId>xsdlib</artifactId>
+            <version>20060615</version>
+            <optional>true</optional>
+        </dependency>
+        
+        <!--
+        Need SAAJ to talk to server using SOAP.
+        
+        SAAJ and its dependencies which are missing in its pom file
+        -->
+        <dependency>
+            <groupId>javax.xml.soap</groupId>
+            <artifactId>saaj-api</artifactId>
+            <version>1.3</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.messaging.saaj</groupId>
+            <artifactId>saaj-impl</artifactId>
+            <version>1.3</version>
+            <optional>true</optional>
+        </dependency>        
+        
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4</version>
+            <optional>true</optional>
+        </dependency>        
+        
+        <dependency>
+            <groupId>javax.activation</groupId>
+            <artifactId>activation</artifactId>
+            <version>1.1</version>
+            <optional>true</optional>
+        </dependency>
+        
+        <!--
+        omar-server is needed for localCall=true mode
+        Add following to application specific pom if using localCall=true mode.
+        -->
+        <!--dependency>
+            <groupId>org.freebxml.omar</groupId>
+            <artifactId>omar-server</artifactId>
+            <version>${pom.version}</version>
+        </dependency-->        
+        
+    </dependencies>
+    
+    
+</project>

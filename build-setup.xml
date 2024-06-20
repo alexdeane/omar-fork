@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-setup.xml,v 1.42 2006/10/26 01:34:07 chaeron Exp $-->
+<project basedir="." default="dummy" name="omar-build-setup">
+
+<target name="dummy" description="Dummy default target, does nothing"/>
+
+<!-- ======================================================== -->
+<!--            Setup targets                                 -->
+<!-- ======================================================== -->
+
+  <target name="setup.omarhome">
+    <copy todir="${omar.home}/data/xsl">
+      <fileset dir="${omar.conf.xsl}" includes="*.xsl"/>
+    </copy>
+  </target>
+
+  <target name="genKeys" description="Generates keys for default users">
+    <dirname file="${omar.security.keystoreFile}" property="omar.security.keystoreDir"/>
+    <echo message="Regenerating server keystore and initializing it with keys for pre-defined users: ${omar.security.keystoreFile}" />
+    <mkdir dir="${omar.security.keystoreDir}"/>
+    <delete failonerror="false" file="${omar.security.keystoreFile}"/>
+
+    <genkey keyalg="RSA" alias="urn:freebxml:registry:predefinedusers:registryguest" keypass="urn:freebxml:registry:predefinedusers:registryguest" keystore="${omar.security.keystoreFile}" storepass="${omar.security.keystorePassword}" storetype="${omar.security.keystoreType}" validity="365">
+      <dname>
+        <param name="CN" value="RegistryGuest"/>
+        <param name="OU" value="unknown"/>
+        <param name="O" value="Source Forge"/>
+        <param name="C" value="anywhere"/>
+      </dname>
+    </genkey>
+    <genkey keyalg="RSA" alias="urn:freebxml:registry:predefinedusers:nikola" keypass="urn:freebxml:registry:predefinedusers:nikola" keystore="${omar.security.keystoreFile}" storepass="${omar.security.keystorePassword}" storetype="${omar.security.keystoreType}" validity="365">
+      <dname>
+        <param name="CN" value="Nikola Stojanovic"/>
+        <param name="OU" value="Research and Development"/>
+        <param name="O" value="Taraba, Inc."/>
+        <param name="C" value="US"/>
+      </dname>
+    </genkey>
+    <genkey keyalg="RSA" alias="urn:freebxml:registry:predefinedusers:farrukh" keypass="urn:freebxml:registry:predefinedusers:farrukh" keystore="${omar.security.keystoreFile}" storepass="${omar.security.keystorePassword}" storetype="${omar.security.keystoreType}" validity="365">
+      <dname>
+        <param name="CN" value="Farrukh Najmi"/>
+        <param name="OU" value="Java Software"/>
+        <param name="O" value="Sun Microsystems"/>
+        <param name="C" value="US"/>
+      </dname>
+    </genkey>
+    <genkey keyalg="RSA" alias="urn:freebxml:registry:predefinedusers:registryoperator" keypass="urn:freebxml:registry:predefinedusers:registryoperator" keystore="${omar.security.keystoreFile}" storepass="${omar.security.keystorePassword}" storetype="${omar.security.keystoreType}" validity="365">
+      <dname>
+        <param name="CN" value="RegistryOperator"/>
+        <param name="OU" value="freebXML Registry"/>
+        <param name="O" value="freebXML"/>
+        <param name="C" value="US"/>
+      </dname>
+    </genkey>
+    <antcall target="genKeys.appserver-truststore"/>
+  </target>
+
+  <target name="genKeys.clean-appserver-truststore">
+    <delete failonerror="false" file="${omar-setup.security.appserverTruststoreFile}"/>
+  </target>
+
+  <target name="genKeys.copy-JVM-Cacerts" unless="omar-setup.security.dontTrustJVMCacerts">
+    <copy file="${omar-setup.security.JVMCacertsFile}" tofile="${omar-setup.security.appserverTruststoreFile}" overwrite="true"/>
+  </target>
+
+  <target name="genKeys.appserver-truststore" depends="init,genKeys.clean-appserver-truststore,genKeys.copy-JVM-Cacerts">
+    <exec executable="${java.home}/bin/keytool" failonerror="true">
+      <arg value="-export"/>
+      <arg value="-alias"/>
+      <arg value="urn:freebxml:registry:predefinedusers:registryoperator"/>
+      <arg value="-keystore"/>
+      <arg value="${omar.security.keystoreFile}"/>
+      <arg value="-storepass"/>
+      <arg value="${omar.security.keystorePassword}"/>
+      <arg value="-file"/>
+      <arg value="${build.home}/RegistryOperator.cert"/>
+    </exec>
+    <exec executable="${java.home}/bin/keytool">
+      <arg value="-import"/>
+      <arg value="-alias"/>
+      <arg value="urn:freebxml:registry:predefinedusers:registryoperator"/>
+      <arg value="-keystore"/>
+      <arg value="${omar-setup.security.appserverTruststoreFile}"/>
+      <arg value="-storepass"/>
+      <arg value="${omar-setup.security.appserverTruststorePassword}"/>
+      <arg value="-file"/>
+      <arg value="${build.home}/RegistryOperator.cert"/>
+      <arg value="-noprompt"/>
+    </exec>
+    <!-- At this point should the RegistryOperator.cert file be deleted? -->
+  </target>
+
+  <target name="genKeys.tomcat">
+    <genkey keyalg="RSA" alias="tomcat" keypass="changeit" keystore="${user.home}/.keystore" storepass="changeit" storetype="jks" validity="365">
+      <dname>
+        <param name="CN" value="Tomcat Server"/>
+        <param name="OU" value="freebXML Registry"/>
+        <param name="O" value="freebXML"/>
+        <param name="C" value="US"/>
+      </dname>
+    </genkey>
+  </target>
+
+  <target name="clean.jaxr-ebxml">
+    <delete failonerror="false" file="${jaxr-ebxml.security.keystoreFile}"/>
+  </target>
+
+  <target name="installUIConfig" depends="i18n.uiconfig">
+    <property
+      name="UIConfigFile"
+      value="registry-browser-config.xml"/>
+    <move
+      failonerror="false"
+      preservelastmodified="true"
+      file="${omar.home}/jaxr-ebxml/${UIConfigFile}"
+      tofile="${omar.home}/jaxr-ebxml/${UIConfigFile}.old"/>
+    <copy
+      failonerror="false"
+      file="${build.classes}/org/freebxml/omar/client/ui/common/conf/config.xml"
+      tofile="${omar.home}/jaxr-ebxml/${UIConfigFile}"/>
+  </target>
+
+
+  <!-- ======================================================== -->
+  <!-- Target to localize config.xml                            -->
+  <!-- ======================================================== -->
+
+  <target name="i18n.uiconfig" depends="jar.common">
+    <java classname="org.freebxml.omar.common.I18nXSLTTask"
+      fork="true" failonerror="true">
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <classpath>
+        <path refid="jaxr.client.compile.classpath"/>
+        <pathelement location="${src.resources}"/>
+      </classpath>
+      <arg value="-xsltFile"/>
+      <arg value="${src.xml}/org/freebxml/omar/common/I18n-rim.xsl"/>
+      <arg value="-sourceDir"/>
+      <arg value="${src.java}/org/freebxml/omar/client/ui/common/conf"/>
+      <arg value="-destDir"/>
+      <arg value="${build.classes}/org/freebxml/omar/client/ui/common/conf"/>
+      <arg value="-bundleBaseName"/>
+      <arg value="org.freebxml.omar.client.ui.common.ResourceBundle"/>
+      <arg value="-localeList"/>
+      <arg value="${localeList}"/>
+    </java>
+  </target>
+
+<!-- ======================================================== -->
+<!--            Deploy targets                                -->
+<!-- ======================================================== -->
+
+  <target name="undeploy"
+	  description="Remove application from container at ${deploy.home}">
+    <delete dir="${deploy.home}/${omar.name}"/>
+    <delete dir="${catalina.base}/work/Catalina/localhost/${omar.name}"/>
+    <delete file="${catalina.base}/conf/Catalina/localhost/${omar.name}.xml"/>
+    <!-- Make sure we use the latest dB jars -->
+    <mkdir dir="${catalina.base}/common/lib"/>
+    <delete>
+      <fileset dir="${catalina.base}/common/lib"
+	       includes="${dbDeploymentJars}"/>
+    </delete>
+  </target>
+
+  <!-- Be careful about repeatedly making the same change to the
+       catalina.properties Tomcat configuration file.  This target also
+       sets a number of properties for later use. -->
+  <target name="-check.catalina.properties">
+    <loadproperties srcFile="${catalina.base}/conf/catalina.properties">
+      <filterchain>
+	<!-- find the few properties we care about -->
+	<linecontains>
+	  <contains value=".loader="/>
+	</linecontains>
+	<!-- make property name more distinct -->
+	<prefixlines prefix="catalina."/>
+	<!-- disable in-file recursive expansion of property values -->
+	<replacestring from="$${" to="$$$${"/>
+      </filterchain>
+    </loadproperties>
+    <property name="catalina.common.loader.add"
+	      value="$${catalina.base}/common/lib/*.jar"/>
+    <property name="catalina.server.loader.add"
+	      value="$${catalina.base}/server/classes"/>
+    <condition property="update.catalina.properties">
+      <not>
+	<or>
+	  <!-- Bother only if Tomcat is spread between 2 dirs -->
+	  <equals arg1="${catalina.home}" arg2="${catalina.base}"/>
+	  <!-- Are the ${catalina.base} directories we need mentioned
+	       already? -->
+	  <and>
+	    <contains string="${catalina.common.loader}"
+		      substring="${catalina.common.loader.add}"/>
+	    <contains string="${catalina.server.loader}"
+		      substring="${catalina.server.loader.add}"/>
+	  </and>
+	</or>
+      </not>
+    </condition>
+    <!--echo message="update.catalina.properties=${update.catalina.properties}
+${line.separator}catalina.common.loader=${catalina.common.loader}"/-->
+  </target>
+
+  <target name="update.catalina.properties"
+	  depends="-check.catalina.properties"
+	  if="update.catalina.properties"
+	  unless="done.update.catalina.properties">
+    <property name="done.update.catalina.properties" value="true"/>
+    <!-- Make a backup of catalina.properties, if none exists -->
+    <copy todir="${catalina.base}/conf" preservelastmodified="true">
+      <fileset dir="${catalina.base}/conf" includes="catalina.properties">
+	<present present="srconly" targetdir="${catalina.base}/conf">
+	  <mapper type="glob" from="*.properties" to="*.properties.sav"/>
+	</present>
+      </fileset>
+      <mapper type="glob" from="*.properties" to="*.properties.sav"/>
+    </copy>
+    <!-- Update ${common.loader} and ${server.loader} appropriately -->
+    <replace file="${catalina.base}/conf/catalina.properties">
+      <replacefilter token="common.loader=${catalina.common.loader}"
+		     value="common.loader=${catalina.common.loader},${catalina.common.loader.add}"/>
+      <replacefilter token="server.loader=${catalina.server.loader}"
+		     value="server.loader=${catalina.server.loader},${catalina.server.loader.add}"/>
+    </replace>
+  </target>
+
+  <target name="deploy"
+	  depends="war, undeploy, update.catalina.properties,
+		   deploy.tomcat.listener"
+	  description="Deploy application to servlet container at: ${deploy.home}">
+    <echo message="Deploying omar to: ${deploy.home}/${omar.name}"/>
+    <!-- ??? Why not copy the .war file into deploy home instead? -->
+    <unwar dest="${deploy.home}/${omar.name}" overwrite="no" src="${build.home}/${omar.name}.war">
+      <patternset>
+        <include name="*"/>
+        <include name="**/*"/>
+        <exclude name="META-INF/**"/>
+      </patternset>
+    </unwar>
+    <copy file="${build.home}/conf/deploy/derby.properties"
+          todir="${catalina.base}/conf"/>
+    <copy file="${build.home}/conf/deploy/jndi-context.xml"
+          tofile="${catalina.base}/conf/Catalina/localhost/${omar.name}.xml"/>
+    <!-- When ${catalina.base} and ${catalina.home} are unequal, common
+         directory is normally found in ${catalina.home} (that is, the
+         installation directory).  update.catalina.properties (above)
+         helps avoid writing into ${catalina.home}. -->
+    <copy todir="${catalina.base}/common/lib" flatten="true">
+      <fileset dir="${build.lib}" excludes="${appserver.excludes}"
+	       includes="${dbDeploymentJars}"/>
+    </copy>
+    <echo message=""/>
+    <echo message="****************Restart Tomcat now.*******************"/>
+    <echo message=""/>
+  </target>
+
+  <!-- Following is not done automatically because the classes do no harm
+       and may be shared between multiple Omar instances in a Tomcat
+       container. -->
+  <target name="undeploy.tomcat.listener"
+	  description="Remove our LifecycleListener.">
+    <delete dir="${catalina.base}/server/classes/org/freebxml/omar"/>
+  </target>
+
+  <target name="deploy.tomcat.listener"
+	  description="Deploy LifecycleListener for Derby into Tomcat"
+	  depends="-check.compile.tomcat.listener, compile.tomcat.listener,
+		   update.catalina.properties"
+	  if="compile.tomcat.listener">
+    <!-- When ${catalina.base} and ${catalina.home} are unequal, server
+         directory is normally found in ${catalina.home} (that is, the
+         installation directory).  update.catalina.properties (above)
+         helps avoid writing into ${catalina.home}. -->
+    <copy todir="${catalina.base}/server/classes">
+      <fileset dir="${build.classes}">
+	<include name="**/omar/server/container/**"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="deploy.webfiles" description="Deploy web files only to deployed application: ${deploy.home}">
+     <copy todir="${deploy.home}/${omar.name}">
+      <fileset dir="${src.home}/html/org/freebxml/omar/client/ui/thin">
+        <include name="*.html"/>
+        <include name="*.css"/>
+        <include name="*.js"/>
+      </fileset>
+      <fileset dir="${src.home}/jsp/org/freebxml/omar/client/ui/thin">
+        <include name="*.jsp"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc">
+      <fileset dir="${omar.basedir}/doc/3.0">
+        <include name="*.html"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/images">
+      <fileset dir="${omar.basedir}/doc/3.0/images">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/thinBrowser">
+      <fileset dir="${omar.basedir}/doc/3.0/thinBrowser">
+        <include name="*.html"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/thinBrowser/images">
+      <fileset dir="${omar.basedir}/doc/3.0/thinBrowser/images">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/registryBrowser">
+      <fileset dir="${omar.basedir}/doc/3.0/registryBrowser">
+        <include name="*.html"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/registryBrowser/images">
+      <fileset dir="${omar.basedir}/doc/3.0/registryBrowser/images">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/developer">
+      <fileset dir="${omar.basedir}/doc/3.0/developer">
+        <include name="*.html"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/developer/images">
+      <fileset dir="${omar.basedir}/doc/3.0/developer/images">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${deploy.home}/${omar.name}/WEB-INF">
+      <fileset dir="${src.home}/xml/org/freebxml/omar/client/ui/thin"/>
+    </copy>
+    <copy todir="${deploy.home}/omar/WEB-INF/classes/org/freebxml/omar/client/ui/thin/bundles">
+      <fileset dir="${src.home}/resources/org/freebxml/omar/client/ui/thin/bundles"/>
+    </copy>
+    <copy todir="${deploy.home}/${omar.name}/images">
+      <fileset dir="${src.home}/images/org/freebxml/omar/client/ui/thin"/>
+    </copy>
+    <copy todir="${deploy.home}/${omar.name}/WEB-INF" file="${src.java}/org/freebxml/omar/client/ui/thin/components/taglib/components.tld"/>
+    <copy todir="${deploy.home}/${omar.name}/WEB-INF" file="conf/faces-config.xml"/>
+  </target>
+
+<!-- ======================================================== -->
+<!--            Database Setup targets                        -->
+<!-- ======================================================== -->
+
+  <!-- Prepare Database Filters -->
+  <target name="check-database-type">
+    <!-- If you add another database type, make sure you add an <equals>
+         for the new type to the <condition> that sets ${database-is-unknown}. -->
+    <condition property="database-is-oracle">
+      <equals arg1="${database}" arg2="oracle" trim="true"/>
+    </condition>
+    <condition property="database-is-postgresql">
+      <equals arg1="${database}" arg2="postgresql" trim="true"/>
+    </condition>
+    <condition property="database-is-hsqldb">
+      <equals arg1="${database}" arg2="hsqldb" trim="true"/>
+    </condition>
+    <condition property="database-is-derby">
+      <equals arg1="${database}" arg2="derby" trim="true"/>
+    </condition>
+    <condition property="database-is-mysql">
+      <equals arg1="${database}" arg2="mysql" trim="true"/>
+    </condition>
+    <condition property="database-is-undefined">
+      <not>
+        <isset property="database"/>
+      </not>
+    </condition>
+    <condition property="database-is-unknown">
+      <not>
+        <or>
+          <equals arg1="${database}" arg2="oracle" trim="true"/>
+          <equals arg1="${database}" arg2="postgresql" trim="true"/>
+          <equals arg1="${database}" arg2="hsqldb" trim="true"/>
+          <equals arg1="${database}" arg2="derby" trim="true"/>
+          <equals arg1="${database}" arg2="mysql" trim="true"/>
+        </or>
+      </not>
+    </condition>
+    <fail if="database-is-undefined"
+      message="The 'database' property has not been set."/>
+    <fail if="database-is-unknown"
+      message="Value of 'database' property is '${database}', which is an unknown database type."/>
+  </target>
+  <target name="prepare-oracle-filtersfile" if="database-is-oracle">
+    <property name="database-filtersfile" value="${omar.conf.database}/oracle-filter.properties"/>
+  </target>
+  <target name="prepare-postgresql-filtersfile" if="database-is-postgresql">
+    <property name="database-filtersfile" value="${omar.conf.database}/postgresql-filter.properties"/>
+  </target>
+  <target name="prepare-hsqldb-filtersfile" if="database-is-hsqldb">
+    <property name="database-filtersfile" value="${omar.conf.database}/hsqldb-filter.properties"/>
+  </target>
+  <target name="prepare-derby-filtersfile" if="database-is-derby">
+    <property name="database-filtersfile" value="${omar.conf.database}/derby-filter.properties"/>
+  </target>
+  <target name="prepare-mysql-filtersfile" if="database-is-mysql">
+    <property name="database-filtersfile" value="${omar.conf.database}/mysql-filter.properties"/>
+  </target>
+  <target name="prepare-database-filtersfile"
+    depends="check-database-type,prepare-oracle-filtersfile, prepare-postgresql-filtersfile, prepare-hsqldb-filtersfile, prepare-derby-filtersfile, prepare-mysql-filtersfile"/>
+  <target name="prepare-cleandb"
+    depends="conf, prepare-database-filtersfile">
+    <copy file="${createdb.script}.template"
+      tofile="${cleandb.script}"
+      overwrite="true">
+      <filterset>
+        <filtersfile file="${omar.conf.database}/cleandb-filters.properties"/>
+        <filtersfile file="${database-filtersfile}"/>
+      </filterset>
+    </copy>
+  </target>
+  <target name="prepare-createdb"
+    depends="conf, prepare-database-filtersfile">
+    <copy file="${createdb.script}.template"
+      tofile="${createdb.script}"
+      overwrite="true">
+      <filterset>
+        <filtersfile file="${omar.conf.database}/createdb-filters.properties"/>
+        <filtersfile file="${database-filtersfile}"/>
+      </filterset>
+    </copy>
+  </target>
+
+  <!-- A few targets need to run in a completely separate Java VM for
+       HSQLDB embedded mode.  This mostly works around the lack of "fork"
+       attribute in the <sql/> task and our need to release the database
+       for other processes.  Though HSQLDB is mentioned prominently, the
+       database locking issues likely affect Derby embedded mode as
+       well. -->
+  <macrodef name="fork-antCall">
+    <attribute name="target"
+	       description="Ant target to be invoked in separate Java VM."/>
+    <sequential>
+      <java classname="org.apache.tools.ant.launch.Launcher"
+	    dir="${omar.basedir}"
+	    failonerror="yes"
+	    fork="true">
+	<arg value="@{target}"/>
+
+	<classpath refid="ant.classpath"/>
+	<sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+
+	<!-- following must be relayed; otherwise, things do not work if
+	     these were overridden from default values -->
+	<arg value="-Dbuild.classes=${build.classes}"/>
+	<arg value="-Dbuild.home=${build.home}"/>
+	<arg value="-Dbuild.lib=${build.lib}"/>
+	<arg value="-Dbuild.properties=${build.properties}"/>
+	<arg value="-Dbuild.test=${build.test}"/>
+	<arg value="-Dbuild.webapps=${build.webapps}"/>
+	<arg value="-Djavacc.home=${javacc.home}"/>
+	<arg value="-Domar.lib=${omar.lib}"/>
+	<arg value="-Domar.name=${omar.name}"/>
+    <arg value="-DlocalCall=${localCall}"/>
+
+	<!-- A matter of asking a question to which there is only one
+	     correct answer. -->
+	<!--arg value="-Dsrc.home=${src.home}"/>
+	<arg value="-Dsrc.java=${src.java}"/>
+	<arg value="-Dsrc.resources=${src.resources}"/-->
+      </java>
+    </sequential>
+  </macrodef>
+
+  <!-- Clean Database -->
+  <target depends="conf, prepare-cleandb, fix.dbURL" name="cleandb">
+    <echo message="cleaning all tables and views in database at: ${dbURL.fixed}"/>
+    <sql autocommit="true" driver="${jdbcClassName}" onerror="continue" password="${dbPassword}" print="yes" src="${cleandb.script}" url="${dbURL.fixed}" userid="${dbUsername}">
+      <classpath>
+        <pathelement location="${jdbcDriver.fullpath}"/>
+      </classpath>
+    </sql>
+  </target>
+  <target name="call-cleandb"
+	  description="clean all tables and views from database">
+    <!-- Run in a different Java VM, to support HSQLDB embedded mode -->
+    <fork-antCall target="cleandb"/>
+  </target>
+
+  <!-- Create Database -->
+  <target name="createdb" depends="conf, prepare-createdb" >
+    <echo message="Database type: ${database}"/>
+    <echo message="creating an empty database at: ${dbURL.fixed}"/>
+    <sql autocommit="true" driver="${jdbcClassName}" password="${dbPassword}" print="yes" src="${createdb.script}" url="${dbURL.fixed}" userid="${dbUsername}">
+      <classpath>
+        <pathelement location="${jdbcDriver.fullpath}"/>
+      </classpath>
+    </sql>
+  </target>
+  <target name="call-createdb">
+    <!-- Run in different JVM, to support HSQLDB embedded mode -->
+    <fork-antCall target="createdb"/>
+  </target>
+
+  <target name="createrepdb" depends="conf, prepare-createdb">
+    <echo message="creating an empty repository database at: ${dbURL.fixed}"/>
+    <!-- Run in different JVM, to support HSQLDB embedded mode -->
+    <java classname="org.freebxml.omar.server.repository.hibernate.RepositoryHibernateUtil"
+	  fork="true" failonerror="true">
+      <classpath>
+        <pathelement location="${build.classes}"/>
+        <pathelement location="${jdbcDriver.fullpath}"/>
+        <path refid="server.run.classpath"/>
+      </classpath>
+      <arg value="-cleandb=true"/>
+      <arg value="-createdb=true"/>
+    </java>
+  </target>
+  <!-- much like an alias for above target -->
+  <target name="call-createrepdb" depends="createrepdb"/>
+
+  <target description="Pretty print Classpath. Usage: ant print.classpath -Dclasspath=CLASSPATH_NAME" name="print.classpath">
+    <pathconvert pathsep="${line.separator}" property="formatted-jarpath" refid="${classpath}"/>
+    <echo message="${classpath}:"/>
+    <echo message="${formatted-jarpath}"/>
+  </target>
+
+  <target name="fix.dbURL" description="Performs variable substitution for $omar.home in dbURL">
+    <!-- replace backslashes for windows.. -->
+    <path id="omar.home.path">
+      <pathelement location="${omar.home}"/>
+    </path>
+    <pathconvert targetos="unix" property="slashed.omar.home" refid="omar.home.path"/>
+
+    <mkdir dir="${build.home}"/>
+    <propertyfile file="${build.home}/fixed.properties" comment="Build-time file for fixing properties">
+      <entry key="dbURL.fixed" value="${dbURL}"/>
+    </propertyfile>
+    <replace file="${build.home}/fixed.properties" token="$$omar.home" value="${slashed.omar.home}"/>
+    <property file="${build.home}/fixed.properties"/>
+    <echo message="Fixed DB URL: ${dbURL.fixed}"/>
+  </target>
+
+</project>

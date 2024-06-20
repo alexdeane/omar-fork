@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+$Header: /cvsroot/ebxmlrr/omar/test/org/freebxml/omar/service/catalogingTest/cppaCataloging/jaxrpc-ri.xml,v 1.1 2004/12/15 15:22:59 tonygraham Exp $
+-->
+
+<webServices
+    xmlns="http://java.sun.com/xml/ns/jax-rpc/ri/dd"
+    version="1.0"
+    targetNamespaceBase="urn:oasis:names:tc:ebxml-regrep:cms:wsdl:3.0"
+    typeNamespaceBase="urn:oasis:names:tc:ebxml-regrep:query:xsd:3.0"
+    urlPatternBase="/catalogingTest">
+
+    <endpoint
+        name="CPPACataloging"
+        displayName="Testing Content Cataloging Service that catalogs CPPA documents."
+        description="Catalogs CPPA documents."
+        wsdl="/WEB-INF/CMSBindings.wsdl"
+        interface="org.freebxml.omar.common.jaxrpc.cms.cataloging.server.ContentCatalogingServicePortType"
+        implementation="org.freebxml.omar.service.catalogingTest.cppaCataloging.CPPACataloging"
+	model="/WEB-INF/model-wsdl-rpcenc.xml.gz"/>
+
+    <endpointMapping
+        endpointName="CPPACataloging"
+        urlPattern="/cppaCataloging"/>
+
+</webServices>

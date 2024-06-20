@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-webstart.xml,v 1.12 2007/05/24 20:13:05 farrukh_najmi Exp $-->
+<project basedir="." default="dummy" name="omar-build-webstart">
+
+  <!--
+  Targets for building and uploading Registry Browser jars for JNLP (Java WebStart).
+  Usage: compile jars clean-jar-signatures signjars upload-webstart-files
+  -->
+
+  <target name="dummy" depends=""/>
+
+  <!--
+  Init properties and other for signjars tasks.
+  -->
+  <target name="init.signjars">
+    <property name="omar.signjars.alias" value="urn:freebxml:registry:predefinedusers:farrukh"/>
+    <property name="omar.signjars.keyPassword" value="urn:freebxml:registry:predefinedusers:farrukh"/>
+    <property name="omar.signjars.keyStore" value="${omar.security.keystoreFile}"/>
+    <property name="omar.signjars.keyStoreType" value="${omar.security.keystoreType}"/>
+    <property name="omar.signjars.keyStorePassword" value="${omar.security.keystorePassword}"/>
+  </target>
+
+  <!--
+  Signs only specified jars. Change as needed.
+  -->
+  <target name="signjars-partial" depends="init.signjars">
+    <signjar alias="${omar.signjars.alias}" storepass="${omar.signjars.keyStorePassword}"
+       keystore="${omar.signjars.keyStore}" keypass="${omar.signjars.keyPassword}"
+       storetype="${omar.signjars.keyStoreType}">
+      <fileset dir="${build.lib}">
+        <include name="**/registry-browser.jar"/>
+        <include name="**/jaxr-ebxml.jar"/>
+        <include name="**/omar-common.jar"/>
+      </fileset>
+    </signjar>
+  </target>
+
+  <!--
+  Signs all jars used by Registry Browser as required by JNLP.
+  -->
+  <target name="signjars" depends="init.signjars">
+    <signjar alias="${omar.signjars.alias}" storepass="${omar.signjars.keyStorePassword}"
+       keystore="${omar.signjars.keyStore}" keypass="${omar.signjars.keyPassword}"
+       storetype="${omar.signjars.keyStoreType}">
+      <fileset dir="${build.lib}">
+        <patternset refid="jaxr.browser.run.files"/>
+      </fileset>
+      <fileset dir="${build.lib}">
+        <include name="**/registry-browser.jar"/>
+      </fileset>
+    </signjar>
+  </target>
+
+  <!--
+  This target was used to rebuild xmlsec.jar to remove its original signature after extracting original jar
+  in a tmp file. There may be a better way.
+  -->
+  <target name="buildjar">
+    <jar manifest="/tmp/xmlsec/META-INF/MANIFEST.MF"
+         jarfile="/tmp/xmlsec.jar"
+         basedir="/tmp/xmlsec">
+        <include name="com/**"/>
+        <include name="META-INF/**"/>
+    </jar>
+  </target>
+
+  <target name="clean-jar-signatures" depends="init.clean-jar-signature"
+          description="Romoves signatures from RegistryBrowser JARs for JNLP usage">
+    <!--clean-jar-signature jar-file="${build.home}/lib/registry-browser.jar"/-->
+    <clean-jar-signature jar-file="${build.home}/lib/FastInfoset.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/activation.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/commons-logging.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/jax-qname.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/jaxb-api.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/jaxb-impl.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/jaxb-libs.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/jaxb-xjc.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/jaxr-api.jar"/>
+    <!--clean-jar-signature jar-file="${build.home}/lib/jaxr-ebxml.jar"/-->
+    <clean-jar-signature jar-file="${build.home}/lib/jgraph.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/log4j.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/mail.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/namespace.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/jgraph.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/log4j.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/mail.jar"/>
+    <!--clean-jar-signature jar-file="${build.home}/lib/oasis-regrep.jar"/-->
+    <!--clean-jar-signature jar-file="${build.home}/lib/omar-common.jar"/-->
+    <!--clean-jar-signature jar-file="${build.home}/lib/omar-ui-conf-bindings.jar"/-->
+    <clean-jar-signature jar-file="${build.home}/lib/relaxngDatatype.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/saaj-api.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/saaj-impl.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/xmldsig.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/xmlsec.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/xsdlib.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/xws-saml.jar"/>
+    <clean-jar-signature jar-file="${build.home}/lib/xws-security.jar"/>
+  </target>
+
+  <target name="init.clean-jar-signature">
+    <macrodef name="clean-jar-signature">
+       <attribute name="jar-file" default="NOT SET"/>
+       <sequential>
+          <echo>Removing signature from: @{jar-file}</echo>
+          <delete dir="${build.home}/jar-tmp"/>
+          <unjar src="@{jar-file}" dest="${build.home}/jar-tmp"/>
+          <delete file="@{jar-file}"/>
+          <jar manifest="${build.home}/jar-tmp/META-INF/MANIFEST.MF"
+               jarfile="@{jar-file}"
+               basedir="${build.home}/jar-tmp">
+              <include name="**"/>
+              <include name="META-INF/**"/>
+              <exclude name="META-INF/*.RSA"/>
+              <exclude name="META-INF/*.SF"/>
+          </jar>
+       </sequential>
+    </macrodef>
+  </target>
+
+
+  <!--
+    Usage: ant -Dscp_user=<user> -Dscp_password=<password> upload-webstart-files-partial
+    Uploads selected files. Change as needed.
+  -->
+  <target name="upload-webstart-files-partial" depends="">
+    <setproxy socksproxyhost="${socksProxyHost}" socksproxyport="${socksProxyPort}" proxyhost="${proxyHost}" proxyport="${proxyPort}"/>
+
+    <scp trust="true" todir="${scp_user}:${scp_password}@ebxmlrr.sourceforge.net:/home/groups/e/eb/ebxmlrr/htdocs/${dist.version}/registryBrowser/jnlp">
+      <fileset dir="${src.java}/org/freebxml/omar/client/ui/common/conf">
+        <include name="**/*.jnlp"/>
+      </fileset>
+      <fileset dir="${build.lib}">
+        <!--include name="**/registry-browser.jar"/>
+        <include name="**/jaxr-ebxml.jar"/>
+        <include name="**/omar-common.jar"/-->
+        <include name="**/xmlsec.jar"/>
+      </fileset>
+    </scp>
+  </target>
+
+  <!--
+    Usage: ant -Dscp_user=<user> -Dscp_password=<password> upload-webstart-files
+    Uploads everything needed for Registry Browser JNLP bundle. Will take at least 30 minutes.
+  -->
+  <target name="upload-webstart-files" depends="">
+    <setproxy socksproxyhost="${socksProxyHost}" socksproxyport="${socksProxyPort}" proxyhost="${proxyHost}" proxyport="${proxyPort}"/>
+
+    <scp trust="true" todir="${scp_user}:${scp_password}@ebxmlrr.sourceforge.net:/home/groups/e/eb/ebxmlrr/htdocs/${dist.version}/registryBrowser/jnlp">
+      <fileset dir="${src.java}/org/freebxml/omar/client/ui/common/conf">
+        <include name="**/*.jnlp"/>
+      </fileset>
+      <fileset dir="${build.lib}">
+        <include name="**/registry-browser.jar"/>
+      </fileset>
+      <fileset dir="${build.lib}">
+        <patternset refid="jaxr.browser.run.files"/>
+      </fileset>
+    </scp>
+  </target>
+
+  <target name="prepare.war.webstart" depends="compile,jars" if="war.includes.webstart">
+    <property name="omar.signjars.target" value="signjars"/>
+    <antcall target="${omar.signjars.target}"/>
+    <property name="war.browser.jnlp.dir" location="${build.webapps}/browser/jnlp"/>
+    <mkdir dir="${war.browser.jnlp.dir}"/>
+    <copy todir="${war.browser.jnlp.dir}" overwrite="true">
+      <fileset dir="${build.lib}">
+        <patternset refid="jaxr.browser.run.files"/>
+        <include name="**/registry-browser.jar"/>
+      </fileset>
+      <fileset dir="${src.home}/jsp/org/freebxml/omar/client/ui/swing">
+        <include name="index.jsp"/>
+        <include name="registryBrowser-jnlp.jsp"/>
+      </fileset>
+    </copy>
+  </target>
+
+</project>

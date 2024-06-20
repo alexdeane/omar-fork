@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--$Header: /cvsroot/ebxmlrr/omar/test/org/freebxml/omar/japex/config.xml,v 1.9 2006/04/05 12:53:40 sunsmitha Exp $-->
+
+<testSuite name="OmarBenchmarkTest" xmlns="http://www.sun.com/japex/testSuite">
+
+  <!--Other Global japex parameters should be specified in build.properties-->
+    
+  <param name="japex.runsPerDriver" value="1"/>
+  <!--param name="japex.warmupTime" value=""/-->
+  <param name="japex.warmupIterations" value="50"/>
+  <!--param name="japex.includeWarmupRun" value=""/-->
+  <!--param name="japex.runTime" value=""/-->
+  <param name="japex.runIterations" value="50"/>    
+  <param name="japex.numberOfThreads" value="1"/>
+      
+  <driver name="UnoptimizedDriver">
+    <param name="japex.driverClass" value="com.sun.japex.jdsl.junit.JUnitDriver"/>
+    <param name="basedir"    value="${japex.workspace.unOptimized}"/>
+    <param name="japex.classPath" value="${japex.home}/jdsl/jdsl.jar"/>
+    <param name="japex.classPath" value="${basedir}/build/lib/*.jar"/>
+    <param name="japex.classPath" value="${basedir}/build/lib/classes" />
+    <param name="japex.classPath" value="${basedir}/build/test/classes" />
+    <param name="japex.classPath" value="${basedir}/misc/lib/*.jar"/>
+    <param name="jaxr-ebxml.soap.url" value="${japex.server.url.unOptimized}"/>
+  </driver>
+  
+  <driver name="OptimizedDriver">
+    <param name="japex.driverClass" value="com.sun.japex.jdsl.junit.JUnitDriver"/>
+    <param name="basedir"    value="${japex.workspace.optimized}"/>
+    <param name="japex.classPath" value="${japex.home}/jdsl/jdsl.jar"/>
+    <param name="japex.classPath" value="${basedir}/build/lib/*.jar"/>
+    <param name="japex.classPath" value="${basedir}/build/lib/classes" />
+    <param name="japex.classPath" value="${basedir}/build/test/classes" />
+    <param name="japex.classPath" value="${basedir}/misc/lib/*.jar"/>
+    <param name="jaxr-ebxml.soap.url" value="${japex.server.url.optimized}"/>
+  </driver>
+
+  <testCase name="testPublishOneExtrinsicObjectWithSlotsClassificationsRepositoryItem">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testPublishOneExtrinsicObjectWithSlotsClassificationsRepositoryItem"/>
+  </testCase>  
+        
+  <testCase name="testQueryRegistryObjectById">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testQueryRegistryObjectById"/>
+  </testCase>  
+    
+  <testCase name="testQueryLeafObjectById">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testQueryLeafObjectById"/>
+  </testCase>  
+    
+  <testCase name="testQueryAuditTrailForRegistryObject()">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testQueryAuditTrailForRegistryObject"/>
+  </testCase>  
+    
+  <testCase name="testQuerySchemeById">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testQuerySchemeById"/>
+  </testCase>  
+            
+  <testCase name="testQueryWsdl">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testQueryWsdl"/>
+  </testCase>  
+    
+  <testCase name="testQueryWsdlService">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testQueryWsdlService"/>
+  </testCase>  
+    
+  <testCase name="testQueryCallersUser">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testQueryCallersUser"/>
+  </testCase>  
+    
+  <testCase name="testDelete">
+    <param name="testName" value="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" />
+    <param name="methodName" value="testDelete"/>
+  </testCase>  
+          
+</testSuite>

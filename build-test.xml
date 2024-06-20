@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-test.xml,v 1.55 2007/05/25 19:33:49 farrukh_najmi Exp $-->
+<project basedir="." default="dummy" name="omar-build-test">
+
+<!-- Dummy default target, does nothing -->
+<target name="dummy"/>
+
+<!-- ======================================================== -->
+<!-- Contains targets related to testing                      -->
+<!-- ======================================================== -->
+
+  <!-- Multiple test targets on the command line will overwrite each other
+       unless bulk of work (anything depending on -prepare.reports.dir
+       target) is done within an <antcall/>.  *.local targets work
+       together; most others do not. -->
+  <!-- Do not define omar.reports.html.dir elsewhere. -->
+  <target name="-prepare.reports.dir" unless="omar.reports.html.dir">
+    <tstamp>
+      <format property="test.tstamp" pattern="yyyyMMdd-HHmmss"/>
+    </tstamp>
+    <!-- If you don't want to have timestamp in your test, you can declare
+         blank "formatted.reports.tstamp" in build.properties -->
+    <property name="formatted.reports.tstamp" value="${test.tstamp}"/>
+
+    <!-- set ${omar.reports.unittest.dir} appropriately (w/ or w/o '-') -->
+    <condition property="omar.reports.unittest.dir"
+	       value="${omar.reports.unittest.dir.prefix}">
+      <!-- treat any whitespace-only value as a request for bare prefix -->
+      <equals arg1="${formatted.reports.tstamp}" arg2="" trim="true"/>
+    </condition>
+    <!-- To distinguish between (for e.g.) "build/reports/unit" and
+         "build/reports/unit/" cases, test whether prefix property value
+         ends in "/" (or "\" on Windows).  If property is a directory and
+         concatenated strings name files placed within it, basename will be
+         "abcd".  Otherwise, ${reports.unittest.prefix.test} property will
+         be basename from ${reports.unittest.dir.prefix} concatenated with
+         "abcd", e.g. "unitabcd" in the most common case.  (There's nothing
+         special about the name "abcd" and tests do not care whether these
+         directories exist.) -->
+    <basename file="${omar.reports.unittest.dir.prefix}abcd"
+	      property="reports.unittest.prefix.test"/>
+    <condition
+	property="omar.reports.unittest.dir"
+	value="${omar.reports.unittest.dir.prefix}${formatted.reports.tstamp}">
+      <!-- will be true if prefix is explicitly a directory (ending with
+           '/' say) and not just a match for an existing directory name or
+           symbolic link -->
+      <equals arg1="abcd" arg2="${reports.unittest.prefix.test}"/>
+    </condition>
+    <property
+	name="omar.reports.unittest.dir"
+	value=
+	"${omar.reports.unittest.dir.prefix}-${formatted.reports.tstamp}"/>
+
+    <!-- set ${omar.reports.html.dir} appropriately: as sub-directory of
+         ${omar.reports.unittest.dir} or a timestamped directory prefixed
+         with ${omar.reports.unittest.html.prefix} (w/ or w/o '-').  If you
+         do not want html directory under unittest dir, declare
+         "omar.reports.unitest.html.prefix" in build.properties -->
+    <condition property="omar.reports.html.dir"
+	       value="${omar.reports.unittest.dir}/html">
+      <not>
+	<isset property="omar.reports.unittest.html.prefix"/>
+      </not>
+    </condition>
+    <condition property="omar.reports.dir"
+	       value="${omar.reports.unittest.html.prefix}">
+      <!-- treat any whitespace-only value as a request for bare prefix -->
+      <equals arg1="${formatted.reports.tstamp}" arg2="" trim="true"/>
+    </condition>
+    <!-- see comment above w/ ${reports.unittest.prefix.test} setting -->
+    <basename file="${omar.reports.unittest.html.prefix}abcd"
+	      property="reports.html.prefix.test"/>
+    <condition
+	property="omar.reports.html.dir"
+	value=
+	"${omar.reports.unittest.html.prefix}${formatted.reports.tstamp}">
+      <!-- see comments above w/ ${reports.unittest.prefix.test} setting
+           and test -->
+      <equals arg1="abcd" arg2="${reports.html.prefix.test}"/>
+    </condition>
+    <property
+	name="omar.reports.html.dir"
+	value=
+	"${omar.reports.unittest.html.prefix}-${formatted.reports.tstamp}"/>
+
+    <condition property="link.reports.dir">
+      <and>
+        <istrue value="${omar.reports.unittest.dir.link}"/>
+	<not>
+	  <equals arg1="${formatted.reports.tstamp}" arg2="" trim="true"/>
+	</not>
+	<!-- don't try to create a link with same path as unittest prefix
+	     directory -->
+	<not>
+	  <equals arg1="abcd" arg2="${reports.unittest.prefix.test}"/>
+	</not>
+      </and>
+    </condition>
+    <condition property="link.html.dir">
+      <and>
+	<!-- duplicate part of ${link.reports.dir} test but ignore the
+	     unittest prefix -->
+        <istrue value="${omar.reports.unittest.dir.link}"/>
+	<not>
+	  <equals arg1="${formatted.reports.tstamp}" arg2="" trim="true"/>
+	</not>
+	<isset property="omar.reports.unittest.html.prefix"/>
+	<!-- don't try to create a link with same path as html prefix
+	     directory -->
+	<not>
+	  <equals arg1="abcd" arg2="${reports.html.prefix.test}"/>
+	</not>
+      </and>
+    </condition>
+    <!-- overloading meaning of ${zip.reports.dir} property: also let
+         '-test.unit.zip' know whether a hyphen separator is needed; do not
+         define property at all when that target should not run -->
+    <condition property="zip.reports.dir" value="">
+      <and>
+	<istrue value="${omar.reports.unittest.dir.zip}"/>
+	<equals arg1="abcd" arg2="${reports.unittest.prefix.test}"/>
+      </and>
+    </condition>
+    <condition property="zip.reports.dir" value="-">
+      <istrue value="${omar.reports.unittest.dir.zip}"/>
+    </condition>
+  </target>
+
+  <!-- Left since doc refers to test target -->
+  <target depends="testSQLQuery" name="test"/>
+  <target name="testSQLQuery">
+    <soapSender req="${samples}/SQLQuery_1.xml" alias="Farrukh"/>
+  </target>
+
+  <target name="runCataloger">
+    <property name="repositoryItem" value="''"/>
+    <xslt in="${inputXML}" style="${invocationControlFile}" out="${catalogedOutput}" force="yes">
+      <param name="repositoryItem" expression="${repositoryItem}"/>
+    </xslt>
+  </target>
+
+  <!-- Specify a target that calls 'runCataloger' with "ant
+       -DcatalogerTarget=target runCatalogerAndSubmit" and this target
+       will run the other target and then submit the result using the
+       'runSOAPSender' target. -->
+  <target name="runCatalogerAndSubmit">
+    <tempfile property="tempFile1" prefix="in" suffix="xml"/>
+    <tempfile property="tempFile2" prefix="out" suffix="xml"/>
+    <antcall target="${catalogerTarget}">
+      <param name="catalogedOutput" value="${tempFile1}"/>
+    </antcall>
+    <xslt in="${tempFile1}" style="${src.home}/xslt/SubmitObjectsRequestWrapper.xsl" out="${tempFile2}" force="yes"/>
+    <soapSender req="${tempFile2}"/>
+    <delete file="${tempFile1}"/>
+    <delete file="${tempFile2}"/>
+  </target>
+
+  <target name="testCatalogerCPP">
+    <property name="catalogedOutput" value="newOutput.xml"/>
+    <antcall target="runCataloger">
+      <param name="inputXML"
+        value="${omar.basedir}/misc/samples/cppa/SubmitObjectsRequest_CPP1ExtrinsicObject.xml"/>
+      <param name="repositoryItem" value="CPP1.xml"/>
+      <param name="invocationControlFile"
+        value="${omar.basedir}/misc/samples/cppa/InvocationControlFile_CPP.xsl"/>
+      <param name="catalogedOutput" value="${catalogedOutput}"/>
+    </antcall>
+  </target>
+
+  <target name="testCatalogerHL7">
+    <property name="catalogedOutput" value="newOutput.xml"/>
+    <antcall target="runCataloger">
+      <param name="inputXML"
+        value="misc/samples/hl7/SubmitObjectsRequest_ConformanceProfile1ExtrinsicObject.xml"/>
+      <param name="repositoryItem" value="ConformanceProfile1.xml"/>
+      <param name="invocationControlFile"
+        value="misc/samples/hl7/InvocationControlFile_HL7CP.xsl"/>
+      <param name="catalogedOutput" value="${catalogedOutput}"/>
+    </antcall>
+  </target>
+
+  <target description="Ensure that results dir exists for conformance tests." name="test.conform.common">
+    <mkdir dir="${samples}/conformance/results"/>
+  </target>
+
+  <target name="-link.html.dir" depends="-prepare.reports.dir"
+	  if="link.html.dir">
+    <basename property="ht.prefix.basename" file="${omar.reports.unittest.html.prefix}"/>
+    <basename property="ht.dir.basename" file="${omar.reports.html.dir}"/>
+    <dirname property="ht.dir.dirname" file="${omar.reports.html.dir}"/>
+    <echo message="Linking ${omar.reports.unittest.html.prefix} to ${ht.dir.basename}"/>
+    <mkdir dir="${ht.dir.dirname}"/>
+    <exec executable="rm" dir="${ht.dir.dirname}" os="Linux,Unix,SunOS">
+      <arg value="-f"/>
+      <arg value="${ht.prefix.basename}"/>
+    </exec>
+    <exec executable="ln" dir="${ht.dir.dirname}" os="Linux,Unix,SunOS">
+      <arg value="-s"/>
+      <arg value="-f"/>
+      <arg value="${ht.dir.basename}"/>
+      <arg value="${ht.prefix.basename}"/>
+    </exec>
+  </target>
+
+  <target name="-link.reports.dir" depends="-prepare.reports.dir"
+	  if="link.reports.dir">
+    <basename property="prefix.basename" file="${omar.reports.unittest.dir.prefix}"/>
+    <basename property="dir.basename" file="${omar.reports.unittest.dir}"/>
+    <dirname property="dir.dirname" file="${omar.reports.unittest.dir}"/>
+    <echo message="Linking ${omar.reports.unittest.dir.prefix} to ${dir.basename}"/>
+    <mkdir dir="${dir.dirname}"/>
+    <exec executable="rm" dir="${dir.dirname}" os="Linux,Unix,SunOS">
+      <arg value="-f"/>
+      <arg value="${prefix.basename}"/>
+    </exec>
+    <exec executable="ln" dir="${dir.dirname}" os="Linux,Unix,SunOS">
+      <arg value="-s"/>
+      <arg value="-f"/>
+      <arg value="${dir.basename}"/>
+      <arg value="${prefix.basename}"/>
+    </exec>
+  </target>
+
+  <target name="-pre.test.run"
+	  depends="compile,jar.ebxml.provider.tests,-prepare.reports.dir"/>
+
+  <target name="-post.test.run"
+  depends="-test.unit.report,-test.unit.zip,-link.reports.dir,-link.html.dir"/>
+
+  <patternset id="test-exclusions">
+    <exclude name="**/ebxmlrr/**"/>
+    <exclude name="**/OMARTest.java"/>
+    <exclude name="**/ClientTest.java"/>
+    <exclude name="**/ServerTest.java"/>
+    <exclude name="**/RepositoryManagerTest.java"/>
+    <exclude name="**/FileSystemRepositoryManagerTest.java"/>
+    <exclude name="**/AbstractFunctionTest.java"/>
+    <exclude name="**/*SystemTest.java"/>
+
+    <!-- Security tests were relevant to xwss1x. Consider removing files in the future -->
+    <!--exclude name="org/freebxml/omar/common/security/**"/-->
+    <patternset refid="compile.security.excludes"/>
+
+    <!--Following is a base class and not an actual test -->
+    <exclude name="**/JAXRTest.java"/>
+  </patternset>
+
+  <patternset id="test-inclusions-exclusions">
+    <include name="**/JTestSystem.java"/>
+    <include name="**/EbxmlTest1.java"/>
+    <include name="**/ApelonJAXRTest.java"/>
+    <include name="**/I18NTest.java"/>
+    <patternset refid="test-exclusions"/>
+  </patternset>
+
+  <macrodef name="run-tests">
+    <element name="includes" implicit="true"/>
+    <sequential>
+      <delete dir="${omar.reports.unittest.dir}"/>
+      <mkdir dir="${omar.reports.unittest.dir}"/>
+      <property name="jvmarg" value=""/>
+      <!-- How many times should some tests run?  Currently used within
+           only a few tests.  Primarily intended for test.single
+           performance tests. -->
+      <property name="test.repetitions.inner" value="1"/>
+      <property name="test.repetitions.outer" value="1"/>
+      <junit printsummary="yes" fork="yes">
+	<classpath>
+	  <path refid="server.run.classpath"/>
+	  <path refid="jaxr.provider.run.classpath"/>
+	  <path refid="test.run.classpath"/>
+	  <pathelement location="${build.lib}/${jaxr.test.name}.jar"/>
+	</classpath>
+	<jvmarg line="${jvmarg}"/>
+	<!-- Set the Endorsed Override Directory for J2SE 1.4 and above -->
+	<sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+	<!--sysproperty key="org.apache.commons.logging.Log" value="${apacheLog}"/-->
+	<!--sysproperty key="org.apache.commons.logging.simplelog.defaultlog" value="trace"/-->
+	<sysproperty key="http.proxyHost" value="${proxyHost}"/>
+	<sysproperty key="http.proxyPort" value="${proxyPort}"/>
+	<sysproperty key="http.nonProxyHosts" value="${nonProxyHosts}"/>
+	<!-- Pass a couple of build settings along to the tests -->
+	<sysproperty key="can.use.ebxmlrr-spec"
+		     value="${can.use.ebxmlrr-spec}"/>
+	<sysproperty key="ebxmlrr-spec.home" value="${ebxmlrr-spec.home}"/>
+	<sysproperty key="test.repetitions.inner"
+		     value="${test.repetitions.inner}"/>
+	<sysproperty key="test.repetitions.outer"
+		     value="${test.repetitions.outer}"/>
+	<formatter type="xml" usefile="true"/>
+	<batchtest fork="true" todir="${omar.reports.unittest.dir}">
+	  <fileset dir="${test.home}">
+	    <includes/>
+	  </fileset>
+	</batchtest>
+      </junit>
+    </sequential>
+  </macrodef>
+
+  <target name="-test.unit.run" depends="-pre.test.run">
+    <run-tests>
+      <include name="**/*Test.java"/>
+      <patternset refid="test-inclusions-exclusions"/>
+    </run-tests>
+  </target>
+
+  <target name="-test.unit.client.run" depends="-pre.test.run">
+    <run-tests>
+      <include name="**/omar/client/**/*Test.java"/>
+      <include name="**/omar/common/**/*Test.java"/>
+      <patternset refid="test-inclusions-exclusions"/>
+    </run-tests>
+  </target>
+
+  <target name="-test.unit.server.run" depends="-pre.test.run">
+    <run-tests>
+      <include name="**/*Test.java"/>
+      <exclude name="**/omar/client/**/*.java"/>
+      <patternset refid="test-inclusions-exclusions"/>
+    </run-tests>
+  </target>
+
+  <!--test.unit requires some CMS related deploy targets in addition to
+       normal deploy target-->
+  <target name="test.unit.deploy"
+	  depends="deploy.war.validationTest,
+		   deploy.war.catalogingTest.cppaCataloging"/>
+
+  <target name="debug.single"
+	  description=
+	  "Debug a single unit test as specified by -Dtest='my.test.TestCase'">
+    <echo message="Debugging ${test}"/>
+    <echo message="Connect to test VM on port ${test.debugSocket}"/>
+    <echo message="Test VM is suspended at startup."/>
+    <property name="jvmarg" value=""/>
+    <antcall target="test.single">
+      <param name="jvmarg" value="${jvmarg} -Xdebug
+-Xrunjdwp:transport=dt_socket,address=${test.debugSocket},server=y,suspend=y"/>
+      <param name="test.suite" value="debug.single"/>
+    </antcall>
+  </target>
+
+  <target name="-test.single.run" depends="-pre.test.run">
+    <pathconvert property="test.from.class" pathsep="">
+      <path>
+	<filelist dir="${test.home}">
+	  <file name="${test}"/>
+	</filelist>
+      </path>
+      <mapper type="unpackage" from="${test.home}/*" to="*.java"/>
+    </pathconvert>
+    <pathconvert property="test.from.base" pathsep="">
+      <path>
+	<fileset dir="${omar.basedir}">
+	  <include name="${test}"/>
+	</fileset>
+      </path>
+      <mapper type="glob" from="${test.home}/*" to="*"/>
+    </pathconvert>
+    <run-tests>
+      <!-- Specified name may be class name -->
+      <include name="${test.from.class}" if="test.from.class"/>
+      <!-- Specified name may be path relative to base directory -->
+      <include name="${test.from.base}" if="test.from.base"/>
+      <!-- Specified name may be path relative to test directory -->
+      <include name="${test}"/>
+      <!-- Specified name may also have included over-inclusive wildcards -->
+      <patternset refid="test-exclusions"/>
+    </run-tests>
+  </target>
+
+  <target name="-pre.test.single">
+    <property name="test.suite" value="test.single"/>
+  </target>
+  <target name="test.single"
+	  depends="-pre.test.single,-test.single.run,-post.test.run"
+	  description=
+	  "Run single unit test as specified by -Dtest='my.test.TestCase'"/>
+
+  <target name="-pre.test.unit.report" >
+    <property name="test.suite" value="unspecified" />
+  </target>
+  <target name="-test.unit.report"
+	  depends="-pre.test.unit.report,-prepare.reports.dir">
+    <delete dir="${omar.reports.html.dir}"/>
+    <mkdir dir="${omar.reports.html.dir}"/>
+    <junitreport todir="${omar.reports.unittest.dir}">
+      <fileset dir="${omar.reports.unittest.dir}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames"
+	      todir="${omar.reports.html.dir}"
+	      styledir="${test.home}/junitStyles/custom"/>
+    </junitreport>
+  </target>
+
+  <target name="-pre.test.unit" >
+    <property name="test.suite" value="test.unit" />
+  </target>
+  <target name="test.unit"
+	  depends="-pre.test.unit,-test.unit.run,-post.test.run"
+	  description=
+	  "Run unit tests.  Report in ${omar.reports.html.dir}/index.html"/>
+
+  <target name="-pre.test.unit.client">
+    <property name="test.suite" value="test.unit.client" />
+  </target>
+  <target name="test.unit.client"
+	  depends="-pre.test.unit.client,-test.unit.client.run,-post.test.run"
+	  description=
+	  "Run client-side unit tests.  Report in ${omar.reports.html.dir}/index.html"/>
+
+  <target name="-pre.test.unit.server" >
+    <property name="test.suite" value="test.unit.server" />
+  </target>
+  <!-- When using Derby embedded mode, this target should be run with the
+       server down. -->
+  <target name="test.unit.server"
+	  depends="-pre.test.unit.server,-test.unit.server.run,-post.test.run"
+	  description=
+	  "Run server-side unit tests.  Report in ${omar.reports.html.dir}/index.html"/>
+
+  <!-- When using Derby embedded mode, this target should be run with the
+       server down. -->
+  <target name="test.unit.local"
+	  description="Run all unit tests in localCall=true mode">
+    <property name="jvmarg" value=""/>
+    <antcall target="test.unit">
+      <param name="jvmarg"
+	     value="${jvmarg}
+		    -Dorg.freebxml.omar.client.xml.registry.localCall=true
+		    -Dorg.freebxml.omar.server.lcm.bypassCMS=true"/>
+      <param name="test.suite" value="test.unit.local"/>
+    </antcall>
+  </target>
+
+  <!-- When using Derby embedded mode, this target should be run with the
+       server down. -->
+  <target name="debug.single.local"
+	  description=
+	  "Debug one unit test (-Dtest='my.test.TestCase') in localCall=true mode">
+    <property name="jvmarg" value=""/>
+    <antcall target="debug.single">
+      <param name="jvmarg"
+	     value="${jvmarg}
+		    -Dorg.freebxml.omar.client.xml.registry.localCall=true
+		    -Dorg.freebxml.omar.server.lcm.bypassCMS=true"/>
+      <param name="test.suite" value="debug.single.local"/>
+    </antcall>
+  </target>
+
+  <!-- When using Derby embedded mode, this target should be run with the
+       server down. -->
+  <target name="test.single.local"
+	  description="Run one unit test (-Dtest='my.test.TestCase') in localCall=true mode">
+    <property name="jvmarg" value=""/>
+    <antcall target="test.single">
+      <param name="jvmarg"
+	     value="${jvmarg}
+		    -Dorg.freebxml.omar.client.xml.registry.localCall=true
+		    -Dorg.freebxml.omar.server.lcm.bypassCMS=true"/>
+      <param name="test.suite" value="test.single.local"/>
+    </antcall>
+  </target>
+
+  <target depends="createDemoDB, test.unit" name="test.regression">
+    <echo message="Ran full regression tests...."/>
+  </target>
+
+  <target name="-test.unit.zip" depends="-prepare.reports.dir"
+	  if="zip.reports.dir">
+    <property name="suffix" value=""/>
+    <tstamp/>
+    <jar destfile=
+"${omar.reports.unittest.dir.prefix}${zip.reports.dir}${DSTAMP}${suffix}.jar"
+	 duplicate="preserve">
+      <zipfileset dir="${omar.reports.unittest.dir}"
+		  prefix="unit-${DSTAMP}${suffix}"
+		  includes="**"/>
+      <zipfileset dir="${omar.reports.html.dir}"
+		  prefix="unit-${DSTAMP}${suffix}/html"
+		  includes="**"/>
+    </jar>
+  </target>
+
+  <!-- ======================================================== -->
+  <!-- Targets to create and load a test user                   -->
+  <!-- ======================================================== -->
+
+  <target name="createTestUser" depends="genkeyTestUser, loadTestUser"/>
+
+  <target name="genkeyTestUser" depends="clean.jaxr-ebxml">
+    <echo message="Generating key for TestUser (run 'ant loadTestUser' if key already exists)"/>
+    <echo message="Keystore: ${jaxr-ebxml.security.keystoreFile}"/>
+    <dirname file="${jaxr-ebxml.security.keystoreFile}" property="jaxr-ebxml.security.keystoreDir"/>
+    <mkdir dir="${jaxr-ebxml.security.keystoreDir}"/>
+    <genkey keyalg="RSA" alias="${testUserAlias}" keypass="${testUserPass}" keystore="${jaxr-ebxml.security.keystoreFile}" storepass="${omar.security.keystorePassword}">
+      <dname>
+        <param name="CN" value="TestUser"/>
+        <param name="OU" value="unknown"/>
+        <param name="O" value="SourceForge"/>
+        <param name="C" value="unknown"/>
+      </dname>
+    </genkey>
+  </target>
+
+  <target name="loadTestUser">
+    <echo message="Loading TestUser as TestUser"/>
+    <!--Can't support localCall mode in SOAPSender since client AND server keyStores need to store the keys.-->
+    <soapSender req="${samples}/demoDB/SubmitObjectsRequest_TestUser.xml"
+      alias="${testUserAlias}"
+      keyPassword="${testUserPass}"
+      keyStore="${jaxr-ebxml.security.keystoreFile}"
+      localCall="false"/>
+  </target>
+
+  <!-- ======================================================== -->
+  <!-- Targets for HSQLDB usage                                 -->
+  <!-- ======================================================== -->
+
+  <target name="hsqldb.start" depends="check-database-type" if="database-is-hsqldb" description="Starts HSQLDB">
+    <exec executable="java" spawn="true">
+      <arg value="-classpath"/>
+      <arg value="${jdbcDriver.fullpath}"/>
+      <arg value="org.hsqldb.Server"/>
+      <arg value="-database.0"/>
+      <arg value="file:${omar.home}/data/registry/${omar.name}"/>
+      <arg value="-dbname.0"/>
+      <arg value="${omar.name}"/>
+    </exec>
+  </target>
+
+  <target name="hsqldb.stop" depends="check-database-type" if="database-is-hsqldb" description="Stop HSQLDB">
+    <java classname="org.hsqldb.util.ShutdownServer"
+	  classpath="${jdbcDriver.fullpath}"
+	  fork="true">
+      <arg value="-url"/>
+      <arg value="jdbc:hsqldb:hsql://localhost/${omar.name}"/>
+    </java>
+  </target>
+
+  <target name="hsqldb.manager" depends="check-database-type" if="database-is-hsqldb" description="Starts HSQLDB Manager Application">
+    <exec executable="java" spawn="true">
+      <arg value="-Xmx256M"/>
+      <arg value="-classpath"/>
+      <arg value="${jdbcDriver.fullpath}"/>
+      <arg value="org.hsqldb.util.DatabaseManager"/>
+    </exec>
+  </target>
+
+</project>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/src/xml/org/freebxml/omar/server/event/listener/client/wscompile-config.xml,v 1.1 2003/11/07 14:36:11 farrukh_najmi Exp $-->
+<configuration
+    xmlns="http://java.sun.com/xml/ns/jax-rpc/ri/config">
+    <wsdl
+        location="../ebxmlrr-spec/misc/2.5/services/NotificationListenerBinding.wsdl"
+        packageName="org.freebxml.omar.server.event.listener.client" />
+</configuration>

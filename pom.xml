@@ -1,0 +1,97 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.freebxml.omar</groupId>
+    <artifactId>omar-project</artifactId>
+    <packaging>pom</packaging>
+    <version>3.1</version>
+    <name>freebXML Registry Project</name>
+    <url>http://ebxmlrr.sourceforge.net/</url>
+
+    <organization>
+        <name>freebXML Software Foundation</name>
+        <url>http://ebxmlrr.sourceforge.net/</url>
+    </organization>
+    
+    <issueManagement>
+        <system>SourceForge Issue Tracker</system>
+        <url>http://sourceforge.net/tracker/?group_id=37074</url>
+    </issueManagement>
+    
+    <scm>
+        <url>http://sourceforge.net/cvs/?group_id=37074</url>
+        <connection>
+             cvs -z3 -d:pserver:anonymous@ebxmlrr.cvs.sourceforge.net:/cvsroot/ebxmlrr co -P modulename
+        </connection>
+        <developerConnection>
+             cvs -z3 -d:ext:developername@ebxmlrr.cvs.sourceforge.net:/cvsroot/ebxmlrr co -P modulename
+        </developerConnection>
+    </scm>
+    
+    <licenses>
+        <license>
+            <name>freebXML License 1.1 (Boilerplated from Apache license)</name>
+            <url>http://ebxmlrr.cvs.sourceforge.net/ebxmlrr/omar/license.txt?view=markup</url>
+        </license>
+    </licenses>
+        
+    <dependencies>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging-api</artifactId>
+            <version>1.0.4</version>            
+        </dependency>
+    </dependencies>
+    
+    <repositories>
+        <repository>
+            <id>omar-maven2-repository</id>
+            <url>http://ebxmlrr.sourceforge.net/maven2/repository</url>
+        </repository>
+        <repository>
+            <id>maven2-repository.dev.java.net</id>
+            <url>http://download.java.net/maven/2</url>
+        </repository>
+        <repository>
+            <id>maven-repository.dev.java.net</id>
+            <url>http://download.java.net/maven/1</url>
+            <layout>legacy</layout>
+        </repository>
+        <repository>
+            <id>Codehaus Snapshots</id>
+            <url>http://snapshots.repository.codehaus.org/</url>
+            <snapshots>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>omar-maven2-repository</id>
+            <url>http://ebxmlrr.sourceforge.net/maven2/repository</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>maven2-repository.dev.java.net</id>
+            <url>http://download.java.net/maven/2</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>maven-repository.dev.java.net</id>
+            <url>http://download.java.net/maven/1</url>
+            <layout>legacy</layout>
+        </pluginRepository>
+        <pluginRepository>
+            <id>Codehaus Snapshots</id>
+            <url>http://snapshots.repository.codehaus.org/</url>
+            <snapshots>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
+    
+    
+</project>

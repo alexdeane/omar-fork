@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/conf/jndi-context-5.5.x.xml,v 1.4 2006/07/29 05:53:37 dougb62 Exp $-->
+<!-- Template for Tomcat 5.5.x context. -->
+<Context path="/$$omar.name$$">
+  <!-- docBase="$$omar.name$$" not added. It should be absolute and is not required. -->
+
+  <Manager className="org.apache.catalina.session.PersistentManager" saveOnRestart="false">
+  	<Store className="org.apache.catalina.session.FileStore" />
+  </Manager>
+
+  <!-- This seems not to work for Tomcat 5.5.x. Left here to find alternative.
+  <Logger className="org.apache.catalina.logger.FileLogger"
+	  prefix="$$omar.name$$."
+	  suffix=".log"
+	  swallowOutput="true"
+	  timestamp="true"/>
+  -->
+
+  <Resource name="jdbc/$$omar.name$$-registry" auth="Container" scope="Shareable"
+            type="javax.sql.DataSource"
+            url="$$DB_URL$$"
+            driverClassName="$$DB_DRIVER_CLASS$$"
+            username="$$DB_USERNAME$$" password="$$DB_PASSWORD$$"
+            maxWait="3000" maxIdle="100" maxActive="50"
+            removeAbandoned="true" removeAbandonedTimeout="60" logAbandoned="true" />
+
+  <!-- Consider adding the following. Check performance.
+            testOnBorrow="true" testOnReturn="true" validationQuery="select 1 from user_"
+  -->
+
+</Context>

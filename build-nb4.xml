@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-nb4.xml,v 1.11 2006/06/09 23:24:52 dougb62 Exp $-->
+<project basedir="." default="dummy" name="omar-build-nb4">
+
+  <target name="dummy" description="Dummy default target, does nothing"/>
+
+  <!-- ======================================================== -->
+  <!-- Contains targets related to Netbeans 4 Integration       -->
+  <!-- ======================================================== -->
+
+  <!-- ======================================================== -->
+  <!-- Actions on src/java tree                                 -->
+  <!-- ======================================================== -->
+
+  <target name="nb4-run-selected-file" depends="compile" description="Run Single File">
+    <fail unless="classname">Must set property 'classname'</fail>
+    <java classname="${classname}" fork="yes">
+      <classpath>
+        <path refid="server.run.classpath"/>
+        <path refid="jaxr.browser.run.classpath"/>
+      </classpath>
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <!-- Set the Endorsed Override Directory for J2SE 1.4 and above -->
+      <sysproperty key="http.proxyHost" value="${proxyHost}"/>
+      <sysproperty key="http.proxyPort" value="${proxyPort}"/>
+      <sysproperty key="http.nonProxyHosts" value="${nonProxyHosts}"/>
+      <sysproperty key="org.apache.commons.logging.Log" value="${apacheLog}"/>
+      <sysproperty key="org.apache.commons.logging.simplelog.defaultlog" value="trace"/>
+    </java>
+  </target>
+
+  <target name="nb4-debug-selected-file" depends="compile" if="netbeans.home" description="Debug a Single File">
+    <fail unless="classname">Must set property 'classname'</fail>
+    <nbjpdastart name="${classname}" addressproperty="jpda.address" transport="dt_socket">
+      <classpath refid="server.run.classpath"/>
+      <!-- Optional - If source roots are properly declared in project, should
+      work without setting source path.
+      <sourcepath refid="debug.sourcepath"/> -->
+      <sourcepath>
+        <pathelement location="${src.java}"/>
+      </sourcepath>
+    </nbjpdastart>
+    <java classname="${classname}" fork="yes">
+      <classpath>
+        <path refid="server.run.classpath"/>
+        <path refid="jaxr.browser.run.classpath"/>
+      </classpath>
+      <jvmarg value="-Xdebug"/>
+      <jvmarg value="-Xnoagent"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+      <sysproperty key="java.compiler" value="none"/>
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <!-- Set the Endorsed Override Directory for J2SE 1.4 and above -->
+      <sysproperty key="http.proxyHost" value="${proxyHost}"/>
+      <sysproperty key="http.proxyPort" value="${proxyPort}"/>
+      <sysproperty key="http.nonProxyHosts" value="${nonProxyHosts}"/>
+    </java>
+  </target>
+
+  <!-- ======================================================== -->
+  <!-- Actions on test tree                                     -->
+  <!-- ======================================================== -->
+
+  <target name="nb4-compile-selected-test-files" depends="prepare">
+    <fail unless="files">Must set property 'files'</fail>
+    <antcall target="compile.test" inheritAll="true">
+      <param name="compile.test.include" value="${files}"/>
+    </antcall>
+  </target>
+
+  <target name="nb4-debug-selected-test-files" depends="compile" if="netbeans.home" description="Debug a Single File">
+    <fail unless="classname">Must set property 'classname'</fail>
+    <nbjpdastart name="${classname}" addressproperty="jpda.address" transport="dt_socket">
+      <classpath refid="test.run.classpath"/>
+      <!-- Optional - If source roots are properly declared in project, should
+      work without setting source path.
+      <sourcepath refid="debug.sourcepath"/> -->
+      <sourcepath>
+        <pathelement location="${src.java}"/>
+        <pathelement location="${test.home}"/>
+      </sourcepath>
+    </nbjpdastart>
+    <!--antcall target="test.single" inheritAll="true">
+      <param name="test" value="${classname}"/>
+      <param name="jvmarg" value="-Xdebug -Xnoagent -Djava.compiler=none -Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+    </antcall-->
+    <junit showoutput="true" fork="yes">
+      <classpath>
+        <path refid="server.run.classpath"/>
+        <path refid="test.run.classpath"/>
+        <pathelement location="${build.lib}/${jaxr.test.name}.jar"/>
+      </classpath>
+      <jvmarg value="-Xdebug"/>
+      <jvmarg value="-Xnoagent"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+      <sysproperty key="java.compiler" value="none"/>
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <!-- Set the Endorsed Override Directory for J2SE 1.4 and above -->
+      <sysproperty key="http.proxyHost" value="${proxyHost}"/>
+      <sysproperty key="http.proxyPort" value="${proxyPort}"/>
+      <sysproperty key="http.nonProxyHosts" value="${nonProxyHosts}"/>
+      <sysproperty key="org.apache.commons.logging.Log" value="${apacheLog}"/>
+      <sysproperty key="org.apache.commons.logging.simplelog.defaultlog" value="trace"/>
+      <formatter usefile="false" type="brief"/>
+      <test name="${classname}" haltonfailure="no"/>
+    </junit>
+  </target>
+
+  <target name="nb4-run-selected-test-files" depends="compile" description="Run Single File">
+    <fail unless="classname">Must set property 'classname'</fail>
+    <!--antcall target="test.single" inheritAll="true">
+      <param name="test" value="${classname}"/>
+    </antcall-->
+    <junit showoutput="true" fork="yes">
+      <classpath>
+        <path refid="server.run.classpath"/>
+        <path refid="test.run.classpath"/>
+        <pathelement location="${build.lib}/${jaxr.test.name}.jar"/>
+      </classpath>
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <!-- Set the Endorsed Override Directory for J2SE 1.4 and above -->
+      <sysproperty key="http.proxyHost" value="${proxyHost}"/>
+      <sysproperty key="http.proxyPort" value="${proxyPort}"/>
+      <sysproperty key="http.nonProxyHosts" value="${nonProxyHosts}"/>
+      <sysproperty key="org.apache.commons.logging.Log" value="${apacheLog}"/>
+      <sysproperty key="org.apache.commons.logging.simplelog.defaultlog" value="trace"/>
+      <formatter usefile="false" type="brief"/>
+      <test name="${classname}" haltonfailure="no"/>
+    </junit>
+  </target>
+
+  <!-- ======================================================== -->
+  <!-- Profiler targets                                         -->
+  <!-- ======================================================== -->
+
+  <!-- Pointer to nb4 profile task. NB will not let you select tasks on imported files -->
+  <target name="profile-project">
+    <antcall target="${netbeans.profile.project.target}"/>
+  </target>
+  <target name="profile-single">
+    <antcall target="${netbeans.profile.single.target}" inheritall="true" inheritrefs="true"/>
+  </target>
+
+  <target name="nb5-profile-project" depends="compile" description="Profile the class hardcoded in this target.">
+    <!--antcall target="test.single" inheritAll="true">
+      <param name="test" value="${classname}"/>
+    </antcall-->
+    <fail unless="netbeans.home">This target can only run inside the NetBeans IDE.</fail>
+    <nbprofiledirect>
+      <classpath>
+        <path refid="server.run.classpath"/>
+        <path refid="test.run.classpath"/>
+        <pathelement location="${build.lib}/${jaxr.test.name}.jar"/>
+      </classpath>
+    </nbprofiledirect>
+    <junit showoutput="true" fork="yes">
+      <classpath>
+        <path refid="server.run.classpath"/>
+        <path refid="test.run.classpath"/>
+        <pathelement location="${build.lib}/${jaxr.test.name}.jar"/>
+      </classpath>
+      <jvmarg line="${profiler.info.jvmargs.agent}"/>
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <!-- Set the Endorsed Override Directory for J2SE 1.4 and above -->
+      <sysproperty key="http.proxyHost" value="${proxyHost}"/>
+      <sysproperty key="http.proxyPort" value="${proxyPort}"/>
+      <sysproperty key="http.nonProxyHosts" value="${nonProxyHosts}"/>
+      <sysproperty key="org.apache.commons.logging.Log" value="${apacheLog}"/>
+      <sysproperty key="org.apache.commons.logging.simplelog.defaultlog" value="trace"/>
+      <formatter usefile="false" type="brief"/>
+      <test name="org.freebxml.omar.client.xml.registry.OmarBenchmarkTest" haltonfailure="no"/>
+    </junit>
+  </target>
+
+</project>

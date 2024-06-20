@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+
+<project>
+
+  <pomVersion>2</pomVersion>
+
+  <name>ebxmlrr Server</name>
+  <id>ebxmlrr-server</id>
+  <groupId>ebxmlrr</groupId>
+  <currentVersion>2.1-final1</currentVersion>
+  <organization>
+    <name>OASIS</name>
+    <url>http://www.oasis-open.org/</url>
+    <logo>/images/oasis_logo.gif</logo>
+  </organization>
+  <inceptionYear>2001</inceptionYear>
+  <package>com.sun.ebxml.registry</package>
+
+  <shortDescription>ebxmlrr Server</shortDescription>
+
+  <description>
+    Server component of the ebxmlrr project.
+  </description>
+
+  <url>http://ebxmlrr.sourceforge.net/ebxmlrr/</url>
+  <logo>/images/xml-pic.jpg</logo>
+  <issueTrackingUrl>
+    http://sourceforge.net/tracker/?group_id=37074
+  </issueTrackingUrl>
+  <siteAddress>shell.sourceforge.net</siteAddress>
+  <siteDirectory>
+    /home/groups/e/eb/ebxmlrr/htdocs/ebxmlrr
+  </siteDirectory>
+  <distributionDirectory>
+    /home/groups/e/eb/ebxmlrr/htdocs/maven/builds
+  </distributionDirectory>
+
+  <repository>
+    <connection>
+      scm:cvs:pserver:anonymous@ebxmlrr.cvs.sourceforge.net:/cvsroot/ebxmlrr:ebxmlrr
+    </connection>
+    <url>
+      http://cvs.sourceforge.net/viewcvs.py/ebxmlrr/ebxmlrr/
+    </url>
+  </repository>
+
+  <versions>
+    <version>
+      <id>2.1-final1</id>
+      <name>2.1-final1</name>
+      <tag>release-2_1-final1</tag>
+    </version>
+    <version>
+      <id>2.1-beta3</id>
+      <name>2.1-beta3</name>
+      <tag>release-2_1-beta3</tag>
+    </version>
+    <version>
+      <id>2.1-beta2</id>
+      <name>2.1-beta2</name>
+      <tag>release-2_1-beta2</tag>
+    </version>
+    <version>
+      <id>2.1-beta1</id>
+      <name>2.1-beta1</name>
+      <tag>release-2_1-beta1</tag>
+    </version>
+  </versions>
+
+
+  <mailingLists/>
+
+
+  <developers>
+
+    <developer>
+      <name>Peter Burgess</name>
+      <id>peteburg</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Adrian Chong</name>
+      <id>skchonghk</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Edwin Goei</name>
+      <id>edwingo</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Peter Kacandes</name>
+      <id>kadyca</id>
+      <roles>
+        <role>distributor</role>
+        <role>promoter</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Farrukh Najmi</name>
+      <id>farrukh_najmi</id>
+      <email>farrukh.najmi@sun.com</email>
+      <organization>SUN</organization>
+      <roles>
+        <role>project manager</role>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Fabian Ritzmann</name>
+      <id>ritzmann</id>
+      <email>XXAPHFSETBJT@spammotel.com</email>
+      <organization>private</organization>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>John Silva</name>
+      <id>jasilva</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Nikola Stojanovic</name>
+      <id>nstojano</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Uday Subbarayan</name>
+      <id>uday_s</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Raghu Venkataramana</name>
+      <id>raghublr</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Michal Zaremba</name>
+      <id>mzaremba</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+    <developer>
+      <name>Diego Ballvé</name>
+      <id>diego_ballve</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+
+  </developers>
+
+
+  <contributors>
+
+    <contributor>
+      <name>Chad Sehn</name>
+      <id>chad_sehn</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </contributor>
+
+  </contributors>
+
+
+  <dependencies>
+
+    <dependency>
+      <id>xml-security</id>
+      <version>1.0.5D2</version>
+      <url>http://xml.apache.org/security/</url>
+    </dependency>
+
+    <dependency>
+      <id>log4j</id>
+      <version>1.2.7</version>
+      <url>http://jakarta.apache.org/log4j/</url>
+    </dependency>
+
+    <dependency>
+      <artifactId>commons-logging</artifactId>
+      <groupId>commons</groupId>
+      <version>1.0.3</version>
+      <url>http://jakarta.apache.org/commons/logging.html</url>
+    </dependency>
+
+    <dependency>
+      <id>xalan</id>
+      <version>2.4.1</version>
+      <url>http://xml.apache.org/xalan-j/</url>
+    </dependency>
+
+    <dependency>
+      <id>xercesImpl</id>
+      <groupId>xerces</groupId>
+      <version>2.3.0</version>
+      <url>http://xml.apache.org/xerces2-j/</url>
+    </dependency>
+
+    <dependency>
+      <id>dom</id>
+      <groupId>xerces</groupId>
+      <version>2.3.0</version>
+      <url>http://xml.apache.org/xerces2-j</url>
+    </dependency>
+
+    <dependency>
+      <id>castor</id>
+      <version>0.9.3.9-xml</version>
+      <url>http://castor.exolab.org/xml-framework.html</url>
+    </dependency>
+
+    <dependency>
+      <id>activation</id>
+      <version>1.0.2</version>
+      <url>http://java.sun.com/products/javabeans/glasgow/jaf.html</url>
+    </dependency>
+
+    <dependency>
+      <id>mail</id>
+      <version>1.2</version>
+      <url>http://java.sun.com/products/javamail/</url>
+    </dependency>
+
+    <dependency>
+      <id>saaj-api</id>
+      <groupId>saaj</groupId>
+      <version>1.2</version>
+      <url>http://java.sun.com/xml/saaj/</url>
+    </dependency>
+
+    <dependency>
+      <id>saaj-impl</id>
+      <groupId>saaj</groupId>
+      <version>1.2</version>
+      <url>http://java.sun.com/xml/saaj/</url>
+    </dependency>
+
+    <dependency>
+      <id>servlet</id>
+      <version>2.2</version>
+      <url>http://java.sun.com/products/servlet/index.html</url>
+    </dependency>
+
+
+    <dependency>
+      <id>ebxmlrr-bindings</id>
+      <groupId>ebxmlrr</groupId>
+      <version>2.1-final1</version>
+      <url>http://ebxmlrr.sourceforge.net/</url>
+    </dependency>
+
+    <dependency>
+      <artifactId>sunxacml</artifactId>
+      <groupId>xacml</groupId>
+      <version>v1_1_rc1</version>
+      <url>http://sunxacml.sourceforge.net/</url>
+    </dependency>
+
+    <!--
+    <dependency>
+      <id>mockobjects-core</id>
+      <groupId>mockobjects</groupId>
+      <version>0.07</version>
+      <url>http://www.mockobjects.com/</url>
+    </dependency>
+
+    <dependency>
+      <id>mockobjects-jdk1.4</id>
+      <groupId>mockobjects</groupId>
+      <version>0.07</version>
+      <url>http://www.mockobjects.com/</url>
+    </dependency>
+    -->
+
+  </dependencies>
+
+
+  <build>
+
+    <name>
+      ebxmlrr
+    </name>
+
+    <nagEmailAddress>
+      ebxmlrr-team@lists.sourceforge.net
+    </nagEmailAddress>
+
+    <sourceDirectory>src/share</sourceDirectory>
+    <unitTestSourceDirectory>test</unitTestSourceDirectory>
+    <integrationUnitTestSourceDirectory/>
+    <aspectSourceDirectory/>
+
+    <!-- Unit test cases -->
+    <unitTest>
+      <includes>
+        <include>**/*Test.java</include>
+      </includes>
+      <excludes>
+        <exclude>**/com/sun/ebxml/registry/conformance/**</exclude>
+      </excludes>
+    </unitTest>
+
+    <!-- J A R  R E S O U R C E S -->
+    <!-- Resources that are packaged up inside the JAR file -->
+    <resources>
+      <includes>
+        <include>*.xsd</include>
+        <include>*.properties</include>
+      </includes>
+    </resources>
+
+    <!-- Integration unit test cases -->
+    <integrationUnitTestPatterns/>
+
+    <jars/>
+
+  </build>
+
+
+  <reports>
+
+    <report>maven-jdepend-plugin</report>
+    <report>maven-checkstyle-plugin</report>
+    <report>maven-changes-plugin</report>
+    <report>maven-changelog-plugin</report>
+    <report>maven-developer-activity-plugin</report>
+    <report>maven-file-activity-plugin</report>
+    <report>maven-license-plugin</report>
+    <report>maven-javadoc-plugin</report>
+    <report>maven-jxr-plugin</report>
+    <report>maven-junit-report-plugin</report>
+    <report>maven-pmd-plugin</report>
+
+  </reports>
+
+
+</project>

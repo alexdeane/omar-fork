@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+$Header: /cvsroot/ebxmlrr/omar/src/xml/org/freebxml/omar/server/event/listener/server/jaxrpc-ri.xml,v 1.3 2006/06/09 21:00:40 dougb62 Exp $
+-->
+
+<webServices
+    xmlns="http://java.sun.com/xml/ns/jax-rpc/ri/dd"
+    version="1.0"
+    targetNamespaceBase="urn:oasis:names:tc:ebxml-regrep:NotificationListenerBinding:wsdl:2.5"
+    typeNamespaceBase="urn:oasis:names:tc:ebxml-regrep:query:xsd:2.5"
+    urlPatternBase="/ebxmlrr">
+
+    <endpoint
+        name="NotificationListener"
+        displayName="Notification Listener for ebXML Registry"
+        description="Listens to event notifications from an ebXML Registry." 
+        wsdl="/WEB-INF/NotificationListenerBinding.wsdl"
+        interface="org.freebxml.omar.common.jaxrpc.notificationListener.server.NotificationListenerPortType"  
+        implementation="org.freebxml.omar.server.event.listener.server.NotificationListenerPortTypeImpl" 
+	     model="/WEB-INF/model-wsdl-rpcenc.xml.gz"/>
+ 
+    <endpointMapping
+        endpointName="NotificationListener"
+        urlPattern="/notificationListener"/>
+
+</webServices>

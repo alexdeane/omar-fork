@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/user-build.xml,v 1.20 2007/06/12 16:29:26 farrukh_najmi Exp $-->
+<project basedir="." default="dummy" 
+         name="omar-user-build"
+         xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+>
+    
+    <!-- Dummy default target, does nothing -->
+    <target name="dummy"/>
+    
+    <!-- Put any user specific targets in this file -->
+
+    <path id="debug.classpath">
+        <pathelement path="${build.lib}/classes"/>
+        <pathelement path="${build.lib}/../test/classes"/>
+        <pathelement path="/home/najmi/jsews/jaxr/src/share"/>
+        <fileset dir="${build.lib}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    
+    <path id="debug.sourcepath">
+        <pathelement path="./src/java"/>
+        <pathelement path="./test"/>
+        <pathelement path="/home/najmi/jsews/jaxr/src/share"/>
+    </path>
+    
+    <target name="debug" depends="compile" if="netbeans.home" description="Debug Project">
+        <nbjpdastart name="freebXML Registry Test" addressproperty="jpda.address" transport="dt_socket">
+            <classpath refid="debug.classpath"/>
+            <!-- Optional - If source roots are properly declared in project, should
+      work without setting source path.  -->
+            <sourcepath refid="debug.sourcepath"/>
+        </nbjpdastart>
+        <java fork="true" classname="org.freebxml.omar.client.ui.swing.RegistryBrowser">
+            <!--java fork="true" classname="org.freebxml.omar.server.cms.CMSManagerImplTest"-->
+            <!--java fork="true" classname="org.freebxml.omar.server.util.SOAPSender"-->
+            <!--java fork="true" classname="org.freebxml.omar.server.lcm.federation.FederationSystemTest"-->
+            <jvmarg value="-Xdebug"/>
+            <jvmarg value="-Xnoagent"/>
+            <jvmarg value="-Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address},suspend=n"/>
+            <sysproperty key="java.compiler" value="none"/>
+            
+            <!-- For SOAPSender -->
+            <arg value="req=${samples}/SQLQuery_1.xml"/>
+            <arg value="alias=RegistryOperator"/>
+            <arg value="keyStore=${omar.security.keystoreFile}"/>
+            <arg value="keyStoreType=${omar.security.keystoreType}"/>
+            <arg value="keyStorePassword=${omar.security.keystorePassword}"/>
+            <arg value="localCall=${localCall}"/>
+            <arg value="url=${omar.url.soap}"/>
+            <arg value="res=response.xml"/>
+            
+            <classpath refid="debug.classpath"/>
+        </java>
+    </target>
+    
+    <!--
+ <target name="format" depends="compile">
+  <taskdef name="jalopy"
+    classname="de.hunsicker.jalopy.plugin.ant.AntPlugin">
+    <classpath>
+      <fileset dir="${jalopy.home}">
+        <include name="*.jar" />
+      </fileset>
+    </classpath>
+  </taskdef>
+    <jalopy convention="conf/sun-coding-convention.xml"
+      history="file"
+      historymethod="adler32"
+      loglevel="info"
+      threads="2"
+      classpathref="test.compile.classpath">
+      <fileset dir="${src.java}">
+        <include name="**/*.java" />
+      </fileset>
+    </jalopy>
+  </target>
+ -->
+
+    <!--
+ <target name="format.dir" depends="compile">
+  <taskdef name="jalopy"
+    classname="de.hunsicker.jalopy.plugin.ant.AntPlugin">
+    <classpath>
+      <fileset dir="${jalopy.home}">
+        <include name="*.jar" />
+      </fileset>
+    </classpath>
+  </taskdef>
+    <jalopy convention="conf/sun-coding-convention.xml"
+      history="file"
+      historymethod="adler32"
+      loglevel="info"
+      threads="2"
+      classpathref="test.compile.classpath">
+      <fileset dir="${dir}">
+        <include name="**/*.java" />
+      </fileset>
+    </jalopy>
+  </target>
+ -->
+    <!--
+ <target name="format.file" depends="compile">
+  <taskdef name="jalopy"
+    classname="de.hunsicker.jalopy.plugin.ant.AntPlugin">
+    <classpath>
+      <fileset dir="${jalopy.home}">
+        <include name="*.jar" />
+      </fileset>
+    </classpath>
+  </taskdef>
+    <jalopy convention="conf/sun-coding-convention.xml"
+      file="${file}"
+      history="file"
+      historymethod="adler32"
+      loglevel="info"
+      threads="2"
+      classpathref="test.compile.classpath">
+    </jalopy>
+  </target>
+  -->
+
+    <target name="echo.classpath">
+        <fail unless="classpath.name" message="Usage: ant echo.classpath -Dclasspath.name=foo.bar.classpath"/>
+        <pathconvert pathsep="${line.separator}" property="formatted-jarpath" refid="${classpath.name}"/>
+        <echo message="${classpath.name}:"/>
+        <echo message="${formatted-jarpath}"/>
+    </target>
+    
+    <target name="wsprofile.create.schematron.rulesfile">
+        <setproxy proxyhost="${proxyHost}" proxyport="${proxyPort}"/>
+        <xslt in="${omar.basedir}/misc/samples/extDB/ws/InvocationControlFile_WSDLValidation.schematron" out="${java.io.tmpdir}/InvocationControlFile_WSDLValidation.xsl" style="${src.home}/java/org/freebxml/omar/server/cms/conf/skeleton1-5.xsl" processor="trax">
+            <outputproperty name="method" value="xml"/>
+            <outputproperty name="encoding" value="iso8859_1"/>
+            <outputproperty name="indent" value="yes"/>
+        </xslt>
+    </target>
+    
+    <target name="wsprofile.validate.wsdl.soapbinding" depends="wsprofile.create.schematron.rulesfile">
+        <setproxy proxyhost="${proxyHost}" proxyport="${proxyPort}"/>
+        <delete file="${java.io.tmpdir}/ebXMLRegistryServices_TestSoapBinding_Validation.txt"/>
+        <xslt in="${test.home}/org/freebxml/omar/server/profile/ws/wsdl/data/ebXMLRegistryServices_TestSoapBinding.wsdl" out="${java.io.tmpdir}/ebXMLRegistryServices_TestSoapBinding_Validation.txt" style="${java.io.tmpdir}/InvocationControlFile_WSDLValidation.xsl" processor="trax">
+            <outputproperty name="method" value="xml"/>
+            <outputproperty name="encoding" value="iso8859_1"/>
+            <outputproperty name="indent" value="yes"/>
+        </xslt>
+    </target>
+    
+    <target name="wsprofile.validate.wsdl.soapstyle" depends="wsprofile.create.schematron.rulesfile">
+        <setproxy proxyhost="${proxyHost}" proxyport="${proxyPort}"/>
+        <delete file="${java.io.tmpdir}/ebXMLRegistryServices_TestSoapStyle_Validation.txt"/>
+        <xslt in="${test.home}/org/freebxml/omar/server/profile/ws/wsdl/data/ebXMLRegistryServices_TestSoapStyle.wsdl" out="${java.io.tmpdir}/ebXMLRegistryServices_TestSoapStyle_Validation.txt" style="${java.io.tmpdir}/InvocationControlFile_WSDLValidation.xsl" processor="trax">
+            <outputproperty name="method" value="xml"/>
+            <outputproperty name="encoding" value="iso8859_1"/>
+            <outputproperty name="indent" value="yes"/>
+        </xslt>
+    </target>
+    
+    <target name="wsprofile.validate.wsdl.soaptransport" depends="wsprofile.create.schematron.rulesfile">
+        <setproxy proxyhost="${proxyHost}" proxyport="${proxyPort}"/>
+        <delete file="${java.io.tmpdir}/ebXMLRegistryServices_TestSoapTransport_Validation.txt"/>
+        <xslt in="${test.home}/org/freebxml/omar/server/profile/ws/wsdl/data/ebXMLRegistryServices_TestSoapTransport.wsdl" out="${java.io.tmpdir}/ebXMLRegistryServices_TestSoapTransport_Validation.txt" style="${java.io.tmpdir}/InvocationControlFile_WSDLValidation.xsl" processor="trax">
+            <outputproperty name="method" value="xml"/>
+            <outputproperty name="encoding" value="iso8859_1"/>
+            <outputproperty name="indent" value="yes"/>
+        </xslt>
+    </target>
+    
+    <target name="jar.xwssec.plugin" depends="compile.common">
+        <jar jarfile="${build.lib}/omar-${soapSecurityProviderName}-plugin.jar" basedir="${build.classes}"
+             includes="${soapSecurityProviderDir}/**"/>
+    </target>
+    
+    <macrodef name="testAuthSend" description="send an authenticated message">
+        <element name="args" implicit="true" optional="true"/>
+        <attribute name="req" default="${samples}/SQLQuery_1.xml"/>
+        <sequential>
+            <soapSender alias="${testUserAlias}"
+                        keyPassword="${testUserPass}"
+                        keyStore="${jaxr-ebxml.security.keystoreFile}"
+                        localCall="false"
+                        req="@{req}">
+                <args/>
+            </soapSender>
+        </sequential>
+    </macrodef>
+    
+    <target name="test.auth.query.0"
+            description="make an authenticated query, 0 attachments">
+        <testAuthSend/>
+    </target>
+    <target name="test.auth.query.1"
+            description="make an authenticated query, 1 attachment">
+        <testAuthSend>
+            <arg value=
+                 "attach=${samples}/Organization3.xml,text/xml,urn:uuid:1dce7d8b-82a4-4318-91d9-ca3d250c6e89"/>
+        </testAuthSend>
+    </target>
+    <target name="test.auth.query.2"
+            description="make an authenticated query, 2 attachments">
+        <testAuthSend>
+            <arg value=
+                 "attach=${samples}/Organization3.xml,text/xml,urn:uuid:4d647a96-6fa9-4611-9693-cc9ef81e2d18"/>
+            <arg value=
+                 "attach=${samples}/Organization4.xml,text/xml,urn:uuid:88948282-b407-42f7-80cb-e1904636bbc0"/>
+        </testAuthSend>
+    </target>
+    <target name="test.auth.query.3"
+            description="make an authenticated query, 3 attachments">
+        <testAuthSend>
+            <arg value=
+                 "attach=${samples}/Organization3.xml,text/xml,urn:uuid:1d69b356-69c7-45d5-aab6-ded82ea4d79a"/>
+            <arg value=
+                 "attach=${samples}/Organization4.xml,text/xml,urn:uuid:6905cdab-6325-4019-9b5e-b77b4e5ea581"/>
+            <arg value=
+                 "attach=${samples}/Organization5.xml,text/xml,urn:uuid:4095e580-b310-42a3-9d53-c66bad8f790b"/>
+        </testAuthSend>
+    </target>
+    
+    <target name="test.failure.submit"
+            description="make an authenticated submission which should fail">
+        <!-- referenced objects already exist and Registry Operator owns them -->
+        <testAuthSend
+            req="${build.samples}/minDB/SubmitObjectsRequest_DataTypeScheme.xml"/>
+    </target>
+    
+    <!--Targets to install omars jars to local maven repository-->
+    <target name="maven.dist" depends="init, jar.common, jar.server, jar.ebxml.provider">
+
+        <artifact:pom id="omar-project" file="pom.xml" />
+        <artifact:install>
+            <pom refid="omar-project"/>
+        </artifact:install>
+        
+        <artifact:pom id="omar-server" file="omar-server.pom.xml" />
+        <artifact:install file="build/lib/omar-server.jar">
+            <pom refid="omar-server"/>
+        </artifact:install>
+        
+        <artifact:pom id="omar-common" file="omar-common.pom.xml" />
+        <artifact:install file="build/lib/omar-common.jar">
+            <pom refid="omar-common"/>
+        </artifact:install>
+        
+        <artifact:pom id="oasis-regrep" file="oasis-regrep.pom.xml" />
+        <artifact:install file="misc/lib/oasis-regrep.jar">
+            <pom refid="oasis-regrep"/>
+        </artifact:install>
+        
+        <artifact:pom id="jaxr-ebxml" file="jaxr-ebxml.pom.xml" />
+        <artifact:install file="build/lib/jaxr-ebxml.jar">
+            <pom refid="jaxr-ebxml"/>
+        </artifact:install>
+        
+        <artifact:pom id="classes12" file="classes12.pom.xml" />
+        <artifact:install file="misc/lib/classes12.jar">
+            <pom refid="classes12"/>
+        </artifact:install>
+        
+        <artifact:pom id="omar-ui-conf-bindings" file="omar-ui-conf-bindings.pom.xml" />
+        <artifact:install file="build/lib/omar-ui-conf-bindings.jar">
+            <pom refid="omar-ui-conf-bindings"/>
+        </artifact:install>
+        
+        <artifact:pom id="sun-xacml" file="sun-xacml.pom.xml" />
+        <artifact:install file="misc/lib/sunxacml.jar">
+            <pom refid="sun-xacml"/>
+        </artifact:install>
+        
+    </target>
+    
+</project>

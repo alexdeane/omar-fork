@@ -1,0 +1,1282 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-compile.xml,v 1.95 2006/11/17 17:27:40 farrukh_najmi Exp $-->
+<project basedir="." default="dummy" name="omar-build-compile">
+
+<!-- Dummy default target, does nothing. -->
+<target name="dummy"/>
+
+<!-- ======================================================== -->
+<!--                   Compile Targets                        -->
+<!-- ======================================================== -->
+
+<!-- Compilation Control Options -->
+<property name="compile.debug" value="true"/>
+<property name="compile.deprecation" value="false"/>
+<property name="compile.optimize" value="false"/>
+
+<!-- Do we know where to find the ebxmlrr-spec workspace? -->
+<available file="${ebxmlrr-spec.home}"
+	   property="can.use.ebxmlrr-spec"
+	   type="dir"/>
+<condition property="skip.service.tests">
+  <not>
+    <!-- ??? ${ebxmlrr-spec.home} is not used in wscompile-config.xml files -->
+    <available type="dir" file="../ebxmlrr-spec"/>
+  </not>
+</condition>
+
+<condition property="skip.japex.tests">
+  <not>
+    <available type="dir" file="${japex.home}"/>
+  </not>
+</condition>
+
+<macrodef name="check.wscompile">
+  <attribute name="configRoot"
+	     default="${src.java}"
+	     description="tree where wscompile-config.xml is found"/>
+  <attribute name="expectedClass"
+	     description="one class name generated in this compilation"/>
+  <attribute name="genTarget"
+	     description="allowed values are 'client' and 'server'"/>
+  <attribute name="guardProperty"
+	     description="property set if ${wscompile} need not be executed"/>
+  <attribute name="relativePath"
+	     description=
+	     "path relative to ${src.java}|${build.home}/org/freebxml/omar/"/>
+  <attribute name="rootPath"
+	     default="/org/freebxml/omar/"
+	     description="avoiding a property, NOT intended to be overridden"/>
+  <attribute name="specVersion"
+	     default="3.0"
+	     description="WSDL and XSD files from which [ebRS]/[ebRIM] spec?"/>
+  <sequential>
+    <condition property="@{guardProperty}">
+      <or>
+	<!-- nothing else is relevant if ../ebxmlrr-spec isn't available -->
+	<isset property="skip.service.tests"/>
+	<and>
+	  <!-- model used later only in the server cases -->
+	  <or>
+	    <equals arg1="client" arg2="@{genTarget}"/>
+	    <upToDate targetFile=
+	    "${build.home}@{rootPath}@{relativePath}/model-wsdl-rpcenc.xml.gz">
+	      <srcFiles dir="@{configRoot}@{rootPath}@{relativePath}">
+		<include name="wscompile-config.xml"/>
+	      </srcFiles>
+	      <!-- ??? ${ebxmlrr-spec.home} is not used in
+	           wscompile-config.xml files -->
+	      <srcFiles dir="../ebxmlrr-spec/misc/@{specVersion}/schema">
+		<include name="*.xsd"/>
+	      </srcFiles>
+	      <srcFiles dir="../ebxmlrr-spec/misc/@{specVersion}/services">
+		<include name="*.wsdl"/>
+	      </srcFiles>
+	    </upToDate>
+	  </or>
+	  <!-- check status of given class' source file, *.class will take
+	       care of themselves -->
+	  <upToDate targetFile=
+		 "${src.java}@{rootPath}@{relativePath}/@{expectedClass}.java">
+	    <srcFiles dir="@{configRoot}@{rootPath}@{relativePath}">
+	      <include name="wscompile-config.xml"/>
+	    </srcFiles>
+	    <!-- ??? ${ebxmlrr-spec.home} is not used in wscompile-config.xml
+		 files -->
+	    <srcFiles dir="../ebxmlrr-spec/misc/@{specVersion}/schema">
+	      <include name="*.xsd"/>
+	    </srcFiles>
+	    <srcFiles dir="../ebxmlrr-spec/misc/@{specVersion}/services">
+	      <include name="*.wsdl"/>
+	    </srcFiles>
+	  </upToDate>
+	</and>
+      </or>
+    </condition>
+  </sequential>
+</macrodef>
+
+<macrodef name="wscompile">
+  <attribute name="configRoot"
+	     default="${src.java}"
+	     description="tree where wscompile-config.xml is found"/>
+  <attribute name="extraFeature1"
+	     default="wsi"
+	     description="if specified, must begin with ','"/>
+  <attribute name="genTarget"
+	     description="allowed values are 'client' and 'server'"/>
+  <attribute name="relativePath"
+	     description=
+	     "path relative to ${src.java}|${build.home}/org/freebxml/omar/"/>
+  <attribute name="rootPath"
+	     default="/org/freebxml/omar/"
+	     description="avoiding a property, NOT intended to be overridden"/>
+  <sequential>
+    <mkdir dir="${build.home}@{rootPath}@{relativePath}"/>
+    <exec executable="${wscompile}">
+      <arg value="-httpproxy:${proxyHost}:${proxyPort}"/>
+      <arg value="-gen:@{genTarget}"/>
+      <arg value="-keep"/>
+      <arg value="-Xprintstacktrace"/>
+      <arg value="-s"/>
+      <arg value="${src.java}"/>
+      <arg value="-features:wsi"/>
+      <arg value="-features:nodatabinding"/>
+      <arg value="-features:@{extraFeature1}"/>
+      <arg value="-d"/>
+      <arg value="${build.classes}"/>
+      <arg value="-classpath"/>
+      <arg value="${build.classes}"/>
+      <arg value="-model"/>
+      <arg value=
+	   "${build.home}@{rootPath}@{relativePath}/model-wsdl-rpcenc.xml.gz"/>
+      <arg value=
+	   "@{configRoot}@{rootPath}@{relativePath}/wscompile-config.xml"/>
+    </exec>
+  </sequential>
+</macrodef>
+
+<!-- Compiles everything (for backward compatibility).  See "jars" target. -->
+<target name="compile.all"
+        depends="compile.common, compile.server, compile.client, compile.test"/>
+
+<!-- compile only the common.security package and sub-packages; this is a
+     convenience target for building alternate SOAP Security Providers -->
+<target name="compile.common.security" depends="prepare">
+  <javac srcdir="${src.java}"
+	 source="${compile.target}"
+	 target="${compile.target}"
+	 debug="${compile.debug}"
+	 deprecation="${compile.deprecation}"
+	 optimize="${compile.optimize}"
+	 fork="true"
+	 destdir="${build.classes}">
+    <classpath refid="common.compile.classpath"/>
+    <include name="org/freebxml/omar/common/security/**"/>
+    <!-- don't compile SOAP Security Pluggable Provider specific code we
+         aren't using -->
+    <patternset refid="compile.security.excludes"/>
+  </javac>
+
+  <!--following to copy the xwssec-config.xml file for xwssec11-->
+  <copy todir="${build.classes}">
+    <fileset dir="${src.java}">
+      <include name="${soapSecurityProviderDir}/*.xml"/>
+    </fileset>
+  </copy>
+</target>
+
+<target name="compile.common" depends="javacc, generate.server.cms">
+  <javac srcdir="${src.java}"
+	 source="${compile.target}"
+	 target="${compile.target}"
+	 debug="${compile.debug}"
+	 deprecation="${compile.deprecation}"
+	 optimize="${compile.optimize}"
+	 fork="true"
+	 destdir="${build.classes}">
+    <classpath refid="common.compile.classpath"/>
+
+    <include name="org/freebxml/omar/common/**"/>
+    <!--exclude name="org/freebxml/omar/common/jaxrpc/**"/-->
+    <!-- don't compile SOAP Security Pluggable Provider specific code we
+         aren't using -->
+    <patternset refid="compile.security.excludes"/>
+  </javac>
+
+  <!--following to copy the xwssec-config.xml file for xwssec11-->
+  <copy todir="${build.classes}">
+    <fileset dir="${src.java}">
+      <include name="${soapSecurityProviderDir}/*.xml"/>
+    </fileset>
+  </copy>
+</target>
+
+<target name="compile.server"
+	depends="compile.common, compile.tomcat.listener">
+    <javac srcdir="${src.java}"
+           source="${compile.target}"
+           target="${compile.target}"
+           debug="${compile.debug}"
+           deprecation="${compile.deprecation}"
+           optimize="${compile.optimize}"
+           fork="true"
+           destdir="${build.classes}">
+        <classpath refid="server.compile.classpath"/>
+        <include name="org/freebxml/omar/server/**"/>
+	<!-- Built separately, if necessary -->
+	<exclude name="org/freebxml/omar/server/container/**"/>
+    </javac>
+
+    <copy todir="${build.classes}/org/freebxml/omar/server/cms/conf"
+          file="${src.java}/org/freebxml/omar/server/cms/conf/skeleton1-5.xsl"/>
+</target>
+
+<!-- For now, only need a server LifecycleListener when deploying into
+     Tomcat and using Derby database. -->
+<target name="-check.compile.tomcat.listener" depends="check-database-type">
+  <!-- Turn path into a string -->
+  <pathconvert pathsep=" "
+	       property="tomcat.compile.classpath.string"
+	       refid="tomcat.compile.classpath"
+	       setonempty="false"/>
+
+  <!-- Should Tomcat / Derby listener be compiled? -->
+  <condition property="compile.tomcat.listener">
+    <and>
+      <isset property="database-is-derby"/>
+      <!-- Will compilation of TomcatListener.java succeed? -->
+      <contains string="${tomcat.compile.classpath.string}"
+		substring="${file.separator}catalina.jar"/>
+    </and>
+  </condition>
+
+  <!-- Failures while compiling DerbyNetworkHelper.java are expected if
+       derbynet.jar is not found.  Later run-time exception looking for
+       this class should be handled appropriately (that is, ignored). -->
+  <condition property="exclude.DerbyNetworkHelper">
+    <not>
+      <contains string="${tomcat.compile.classpath.string}"
+		substring="${file.separator}derbynet.jar"/>
+    </not>
+  </condition>
+</target>
+
+<target name="compile.tomcat.listener" depends="-check.compile.tomcat.listener"
+	if="compile.tomcat.listener">
+  <javac debug="${compile.debug}"
+	 deprecation="${compile.deprecation}"
+	 destdir="${build.classes}"
+	 fork="true"
+	 optimize="${compile.optimize}"
+	 source="${compile.target}"
+	 srcdir="${src.java}"
+	 target="${compile.target}">
+    <classpath refid="tomcat.compile.classpath"/>
+    <include name="org/freebxml/omar/server/container/**"/>
+    <exclude name="org/freebxml/omar/server/container/DerbyNetworkHelper.java"
+	     if="exclude.DerbyNetworkHelper"/>
+  </javac>
+</target>
+
+
+<target name="compile.all-at-once" depends="javacc, compile.test">
+	<!-- Compile all the sources -->
+	<javac srcdir="${src.java}"
+                source="${compile.target}"
+                target="${compile.target}"
+		debug="${compile.debug}"
+		deprecation="${compile.deprecation}"
+		optimize="${compile.optimize}"
+		fork="true"
+		destdir="${build.classes}">
+		<classpath refid="server.compile.classpath"/>
+		<exclude name="**/SCCS/**"/>
+		<exclude name="**/sun/**"/>
+		<!-- don't compile SOAP Security Pluggable Provider
+		     specific code we aren't using -->
+		<patternset refid="compile.security.excludes"/>
+	</javac>
+</target>
+
+<!-- Compile all the test program sources -->
+<target name="compile.test">
+  <!-- What files should we compile? -->
+  <property name="compile.test.include" value="**/omar/**"/>
+
+  <mkdir dir="${build.test}/classes"/>
+  <javac srcdir="${test.home}"
+	 source="${compile.target}"
+	 target="${compile.target}"
+	 debug="${compile.debug}"
+	 deprecation="${compile.deprecation}"
+	 optimize="${compile.optimize}"
+	 fork="true"
+	 destdir="${build.test}/classes"
+	 includes="${compile.test.include}">
+    <classpath refid="test.compile.classpath"/>
+
+    <exclude name="org/freebxml/omar/service/**" if="skip.service.tests"/>
+    <exclude name="org/freebxml/omar/japex/**" if="skip.japex.tests"/>
+    <patternset refid="compile.security.excludes"/>
+  </javac>
+</target>
+
+<target name="compile.client"
+        depends="installUIConfig, compile.ebxml.provider, compile.browser, compile.client.thin, compile.ebxml.provider.tests, compile.adminTool"/>
+
+<target name="compile.ebxml.provider" depends="prepare, jar.common"
+        description="Compile only the JAXR ebXML provider code">
+    <!-- Compile only the ebXML provider sources -->
+    <javac fork="true" source="${compile.target}" target="${compile.target}" debug="${compile.debug}" deprecation="${compile.deprecation}" destdir="${build.classes}" optimize="${compile.optimize}" srcdir="${src.java}">
+        <classpath refid="jaxr.provider.compile.classpath"/>
+        <include name="org/freebxml/omar/client/xml/registry/**"/>
+    </javac>
+</target>
+
+
+<target name="compile.client.common" depends="jar.ebxml.provider"
+    description="Compile the client common files">
+    <javac fork="true" memoryMaximumSize="100m" source="${compile.target}" target="${compile.target}" debug="${compile.debug}" deprecation="${compile.deprecation}" destdir="${build.classes}" optimize="${compile.optimize}" srcdir="${src.java}">
+        <classpath refid="jaxr.browser.compile.classpath"/>
+        <include name="org/freebxml/omar/client/common/**"/>
+    </javac>
+</target>
+
+<target name="compile.browser" depends="jar.ebxml.provider, compile.client.common" description="Compile the JAXR Browser">
+    <javac fork="true" memoryMaximumSize="100m" source="${compile.target}" target="${compile.target}" debug="${compile.debug}" deprecation="${compile.deprecation}" destdir="${build.classes}" optimize="${compile.optimize}" srcdir="${src.java}">
+        <classpath refid="jaxr.browser.compile.classpath"/>
+        <include name="org/freebxml/omar/client/ui/common/**"/>
+        <include name="org/freebxml/omar/client/ui/swing/**"/>
+    </javac>
+</target>
+
+<target name="compile.client.thin" depends="compile.browser" description="Compile the Thin UI">
+    <javac fork="true" memoryMaximumSize="100m" source="${compile.target}" target="${compile.target}" debug="${compile.debug}" deprecation="${compile.deprecation}" destdir="${build.classes}" optimize="${compile.optimize}" srcdir="${src.java}">
+        <classpath refid="thin.client.compile.classpath"/>
+        <include name="org/freebxml/omar/client/ui/thin/**"/>
+    </javac>
+</target>
+
+<target name="compile.adminTool" depends="prepare, compile.client.common">
+    <javac fork="true" source="${compile.target}" target="${compile.target}" debug="${compile.debug}" deprecation="${compile.deprecation}" destdir="${build.classes}" optimize="${compile.optimize}" srcdir="${src.java}">
+        <classpath refid="adminTool.compile.classpath"/>
+        <include name="org/freebxml/omar/client/admin/**"/>
+    </javac>
+</target>
+
+
+<!--target name="compile.client.util" depends="prepare" description="Compile useful JAXR client utilities">
+    <javac source="${compile.target}" target="${compile.target}" debug="${compile.debug}" deprecation="${compile.deprecation}" destdir="${build.classes}" optimize="${compile.optimize}" srcdir="${src.java}">
+        <classpath refid="jaxr.browser.compile.classpath"/>
+        <include name="**/client/util/**"/>
+    </javac>
+</target-->
+
+<target name="compile.ebxml.provider.tests"
+        depends="prepare, jar.ebxml.provider">
+    <!-- Compile all the test program sources. //TODO: -->
+    <!--javac debug="${compile.debug}"
+           deprecation="${compile.deprecation}"
+           destdir="${build.test.classes}"
+           optimize="${compile.optimize}"
+           srcdir="${test.home}">
+        <classpath refid="jaxr.test.compile.classpath"/>
+    </javac-->
+</target>
+
+<!-- ======================================================== -->
+<!--                   Jar/War Targets                        -->
+<!-- ======================================================== -->
+
+<!-- Properties for *ar names -->
+<property name="adminTool.name" value="admin-tool"/>
+<property name="browser.name" value="registry-browser"/>
+<property name="jaxr.admin.name" value="jaxr-ebxml-admin"/>
+<property name="jaxr.provider.name" value="jaxr-ebxml"/>
+<property name="jaxr.test.name" value="jaxr-ebxml-test"/>
+
+<target name="jar.ebxml.provider"
+        depends="prepare,compile.ebxml.provider"
+        description="create jar file containing only the JAXR ebXML provider">
+
+    <pathconvert property="provider.manifest.classpath"
+		 dirsep="/"
+		 pathsep=" "
+		 setonempty="false">
+      <mapper refid="manifest.mapper"/>
+      <path>
+	<path refid="jaxr.provider.run.classpath"/>
+	<path refid="jaxr.provider.extra.classpath"/>
+      </path>
+    </pathconvert>
+
+    <manifest file="${build.lib}/jaxr-ebxml.manifest" mode="replace">
+        <attribute name="Class-Path"
+		   value="${provider.manifest.classpath}"/>
+        <attribute name="Build-Time"
+                   value="${DSTAMP}${TSTAMP}"/>
+
+	<!-- TODO: we do not use this package name these days -->
+        <section name="com/sun/xml/registry/ebxml">
+            <attribute name="Specification-Title"
+                       value="Java API for XML Registries"/>
+            <attribute name="Specification-Version"
+                       value="${jaxr.spec.version}"/>
+            <attribute name="Specification-Vendor"
+                       value="Sun Microsystems Inc."/>
+            <attribute name="Implementation-Title"
+                       value="com.sun.xml.registry.ebxml"/>
+            <attribute name="Implementation-Version"
+                       value="${jaxr.ebxml.version}"/>
+            <attribute name="Implementation-Vendor"
+                       value="freebxml"/>
+            <attribute name="Implementation-URL"
+                       value="http://ebxmlrr.sourceforge.net/"/>
+        </section>
+    </manifest>
+
+
+    <!-- //TODO: Review this -->
+    <!-- Copy over service provider config file -->
+    <!-- This version is conformant to Jar Service Provider spec -->
+    <copy todir="${build.classes}/META-INF/services"
+          file="conf/javax.xml.registry.ConnectionFactory"/>
+
+    <!-- Workaround for javax.xml.registry.ConnectionFactory bug in
+         jaxr-api.jar not following Jar Service Provider spec.  This version
+         can be removed once this bug is fixed. -->
+    <copy tofile="${build.classes}/META-INF/services/javax.xml.registry.ConnectionFactoryClass"
+          file="conf/javax.xml.registry.ConnectionFactory"/>
+
+    <jar manifest="${build.lib}/jaxr-ebxml.manifest"
+         jarfile="${build.lib}/${jaxr.provider.name}.jar"
+         basedir="${build.classes}">
+        <include name="org/freebxml/omar/client/xml/registry/**"/>
+        <include name="META-INF/**"/>
+        <include name="commons-logging.properties"/>
+        <include name="log4j.properties"/>
+    </jar>
+
+</target>
+
+<target name="jar.ebxml.provider.tests"
+        depends="prepare,jar.ebxml.provider,compile.ebxml.provider.tests"
+        description="Create jar containing only JAXR ebXML provider tests">
+
+    <!-- Remove path prefixes from list of files and build a list for Class-Path -->
+    <pathconvert property="test.manifest.classpath"
+                 setonempty="false"
+                 dirsep="/" pathsep=" "
+                 refid="jaxr.test.run.classpath">
+        <map from="${build.lib}${file.separator}" to=""/>
+    </pathconvert>
+
+    <manifest file="${build.lib}/jaxr-ebxml-test.manifest"
+              mode="replace">
+
+        <attribute name="Main-Class"
+                   value="com.sun.xml.registry.ebxml.EbxmlTest1"/>
+        <attribute name="Class-Path"
+                   value="${test.manifest.classpath}"/>
+        <attribute name="Build-Time"
+                   value="${DSTAMP}${TSTAMP}"/>
+
+	<!-- TODO: we do not use this package name these days -->
+        <section name="com/sun/xml/registry/ebxml">
+            <attribute name="Specification-Title"
+                       value="Registry Browser"/>
+            <attribute name="Specification-Version"
+                       value="${jaxr.spec.version}"/>
+            <attribute name="Specification-Vendor"
+                       value="freebxml"/>
+            <attribute name="Implementation-Title"
+                       value="com.sun.xml.registry.ebxml"/>
+            <attribute name="Implementation-Version"
+                       value="${jaxr.ebxml.version}"/>
+            <attribute name="Implementation-Vendor"
+                       value="freebxml"/>
+            <attribute name="Implementation-URL"
+                       value="http://ebxmlrr.sourceforge.net/"/>
+        </section>
+
+    </manifest>
+
+    <jar manifest="${build.lib}/jaxr-ebxml-test.manifest"
+         jarfile="${build.lib}/${jaxr.test.name}.jar">
+
+        <fileset dir="${build.classes}">
+            <!-- Include the client utils code in same jar -->
+            <include name="**/client/util/**"/>
+        </fileset>
+
+    </jar>
+
+</target>
+
+
+<target name="jar.browser" depends="compile.browser"
+        description="create jar file containing only the JAXR Browser">
+
+    <!-- Remove path prefixes from list of files and build a list for Class-Path -->
+    <pathconvert property="browser.manifest.classpath"
+                 setonempty="false"
+                 dirsep="/" pathsep=" "
+                 refid="jaxr.browser.run.classpath">
+        <map from="${build.lib}${file.separator}" to=""/>
+    </pathconvert>
+
+    <manifest file="${build.lib}/registry-browser.manifest"
+              mode="replace">
+
+        <attribute name="Main-Class"
+                   value="org.freebxml.omar.client.ui.swing.RegistryBrowser"/>
+        <attribute name="Class-Path"
+                   value="${browser.manifest.classpath}"/>
+        <attribute name="Build-Time"
+                   value="${DSTAMP}${TSTAMP}"/>
+
+	<!-- TODO: we do not use this package name these days -->
+        <section name="com/sun/xml/registry/client/browser">
+            <attribute name="Specification-Title"
+                       value="Registry Browser"/>
+            <attribute name="Specification-Version"
+                       value="${browser.version}"/>
+            <attribute name="Specification-Vendor"
+                       value="freebxml"/>
+            <attribute name="Implementation-Title"
+                       value="Registry Browser"/>
+            <attribute name="Implementation-Version"
+                       value="${dist.version}"/>
+            <attribute name="Implementation-Vendor"
+                       value="freebxml"/>
+            <attribute name="Implementation-URL"
+                       value="http://ebxmlrr.sourceforge.net/"/>
+        </section>
+
+    </manifest>
+
+    <copy todir="${build.classes}/META-INF"
+          file="conf/mime.types"/>
+
+    <jar manifest="${build.lib}/registry-browser.manifest"
+         jarfile="${build.lib}/${browser.name}.jar"
+         basedir="${build.classes}">
+        <metainf dir="${build.classes}/META-INF">
+            <include name="mime.types"/>
+        </metainf>
+        <include name="org/freebxml/omar/client/ui/common/**"/>
+	<!-- Do not include the UI config bindings (if built locally) -->
+	<exclude name="${relative.dir.ui.bindings}/**"/>
+        <include name="org/freebxml/omar/client/common/**"/>
+        <include name="org/freebxml/omar/client/ui/swing/**"/>
+        <include name="icons/**"/>
+        <include name="commons-logging.properties"/>
+        <include name="log4j.properties"/>
+    </jar>
+
+</target>
+
+<target name="jar.adminTool" depends="compile.adminTool"
+        description="create jar file containing only the admin tool">
+
+    <!-- Remove path prefixes from list of files and build a list for Class-Path -->
+    <pathconvert property="adminTool.manifest.classpath"
+		 dirsep="/"
+		 pathsep=" "
+		 setonempty="false">
+      <path>
+	<path refid="adminTool.run.classpath"/>
+	<path refid="adminTool.extra.classpath"/>
+      </path>
+      <mapper refid="manifest.mapper"/>
+    </pathconvert>
+
+    <manifest file="${build.lib}/admin-tool.manifest"
+              mode="replace">
+        <attribute name="Main-Class"
+                   value="org.freebxml.omar.client.admin.AdminTool"/>
+        <attribute name="Class-Path"
+		   value="${adminTool.manifest.classpath}"/>
+        <attribute name="Build-Time"
+                   value="${DSTAMP}${TSTAMP}"/>
+
+	<!-- TODO: we do not use this package name these days -->
+        <section name="com/sun/xml/registry/client/adminTool">
+            <attribute name="Specification-Title"
+                       value="Admin Tool"/>
+            <attribute name="Specification-Version"
+                       value="${dist.version}"/>
+            <attribute name="Specification-Vendor"
+                       value="freebxml"/>
+            <attribute name="Implementation-Title"
+                       value="Admin Tool"/>
+            <attribute name="Implementation-Version"
+                       value="${dist.version}"/>
+            <attribute name="Implementation-Vendor"
+                       value="freebxml"/>
+            <attribute name="Implementation-URL"
+                       value="http://ebxmlrr.sourceforge.net/"/>
+        </section>
+
+    </manifest>
+
+    <copy todir="${build.classes}/META-INF"
+          file="conf/mime.types"/>
+
+    <jar manifest="${build.lib}/admin-tool.manifest"
+         jarfile="${build.lib}/${adminTool.name}.jar"
+         basedir="${build.classes}">
+        <metainf dir="${build.classes}/META-INF">
+            <include name="mime.types"/>
+        </metainf>
+        <include name="org/freebxml/omar/client/admin/**"/>
+        <include name="org/freebxml/omar/client/xml/registry/util/jaxr-ebxml-defaults.properties"/>
+        <include name="org/freebxml/omar/client/common/**"/>
+        <include name="org/freebxml/omar/common/omar-common-defaults.properties"/>
+        <include name="commons-logging.properties"/>
+        <include name="log4j.properties"/>
+    </jar>
+
+</target>
+
+<target name="jar.common" depends="compile.common">
+  <pathconvert property="common.manifest.classpath"
+	       dirsep="/"
+	       pathsep=" "
+	       setonempty="false">
+    <path>
+      <path refid="common.run.classpath"/>
+      <path refid="common.extra.classpath"/>
+    </path>
+    <mapper refid="manifest.mapper"/>
+  </pathconvert>
+
+  <!-- TODO: versions and other settings in Manifest files could use some
+       more general clean-up -->
+  <property name="common.implementation.version" value="${dist.version}"/>
+  <property name="common.specification.version" value="3.0"/>
+
+  <jar basedir="${build.classes}"
+       jarfile="${build.lib}/${commonLib}">
+    <include name="org/freebxml/omar/common/**/**"/>
+    <manifest>
+      <attribute name="Class-Path"
+		 value="${common.manifest.classpath}"/>
+      <attribute name="Implementation-Title"
+		 value="Common classes"/>
+      <attribute name="Implementation-URL"
+		 value="http://ebxmlrr.sourceforge.net/"/>
+      <attribute name="Implementation-Vendor"
+		 value="freebxml"/>
+      <attribute name="Implementation-Vendor-Id"
+		 value="omar.freebxml.org"/>
+      <attribute name="Implementation-Version"
+		 value="${common.implementation.version}"/>
+      <attribute name="Specification-Title"
+		 value="ebXML Registry Information Model"/>
+      <attribute name="Specification-Vendor"
+		 value="OASIS"/>
+      <attribute name="Specification-Version"
+		 value="${common.specification.version}"/>
+    </manifest>
+  </jar>
+</target>
+
+<target name="jar.server" depends="compile.server">
+  <pathconvert property="server.manifest.classpath"
+	       dirsep="/"
+	       pathsep=" "
+	       setonempty="false">
+    <path>
+      <path refid="server.run.classpath"/>
+    </path>
+    <mapper refid="manifest.mapper"/>
+  </pathconvert>
+
+  <!-- TODO: versions and other settings in Manifest files could use some
+       more general clean-up -->
+  <property name="server.implementation.version" value="${dist.version}"/>
+  <property name="server.specification.version" value="3.0"/>
+
+  <jar basedir="${build.classes}"
+       jarfile="${build.lib}/${serverLib}">
+    <include name="org/freebxml/omar/server/**/**"/>
+    <manifest>
+      <attribute name="Class-Path"
+		 value="${server.manifest.classpath}"/>
+      <attribute name="Implementation-Title"
+		 value="freebXML Registry server classes"/>
+      <attribute name="Implementation-URL"
+		 value="http://ebxmlrr.sourceforge.net/"/>
+      <attribute name="Implementation-Vendor"
+		 value="freebXML Registry"/>
+      <attribute name="Implementation-Vendor-Id"
+		 value="omar.freebxml.org"/>
+      <attribute name="Implementation-Version"
+		 value="${server.implementation.version}"/>
+      <attribute name="Specification-Title"
+		 value="ebXML Registry 3.0"/>
+      <attribute name="Specification-Vendor"
+		 value="OASIS"/>
+      <attribute name="Specification-Version"
+		 value="${server.specification.version}"/>
+    </manifest>
+  </jar>
+</target>
+
+<target name="jar.bindings.ui.conf" depends="bindings, compile">
+  <copy todir="${build.classes}">
+    <fileset dir="src/java">
+      <include name="**/*.properties"/>
+    </fileset>
+  </copy>
+  <jar jarfile="misc/lib/${ui.conf.bindings.lib}"
+       basedir="${build.classes}"
+       includes="${relative.dir.ui.bindings}/**"/>
+</target>
+
+<target name="jars"
+        depends="compile, jar.ebxml.provider, jar.browser, jar.adminTool, jar.ebxml.provider.tests"
+        description="Build jar files"/>
+
+<target name="-check.client.registry">
+  <check.wscompile expectedClass="LifeCycleManagerPortType"
+		   genTarget="client"
+		   guardProperty="skip.client.registry"
+		   relativePath="common/jaxrpc/registry/client"/>
+</target>
+
+<target name="generate.client.registry"
+	depends="-check.client.registry"
+	unless="skip.client.registry">
+  <wscompile extraFeature1="explicitcontext"
+	     genTarget="client"
+	     relativePath="common/jaxrpc/registry/client"/>
+</target>
+
+<target name="-check.server.registry">
+  <check.wscompile expectedClass="LifeCycleManagerPortType"
+		   genTarget="server"
+		   guardProperty="skip.server.registry"
+		   relativePath="common/jaxrpc/registry/server"/>
+</target>
+
+<target name="generate.server.registry"
+	depends="-check.server.registry"
+	unless="skip.server.registry">
+  <wscompile extraFeature1="explicitcontext"
+	     genTarget="server"
+	     relativePath="common/jaxrpc/registry/server"/>
+</target>
+
+  <!-- ??? This target is presently used only in deploy.war.registry,
+       should both be removed? -->
+  <target name="create.war.registry"
+	  depends="compile"
+	  if="can.use.ebxmlrr-spec">
+    <mkdir dir="${build.home}/org/freebxml/omar/server/interfaces/soap" />
+    <war destfile="${build.home}/org/freebxml/omar/server/interfaces/soap/registryRaw.war"
+         webxml="${src.java}/org/freebxml/omar/server/interfaces/soap/web.xml">
+        <webinf dir="${ebxmlrr-spec.home}/misc/3.0/services" includes="ebXMLRegistry*.wsdl"/>
+        <webinf dir="${src.java}/org/freebxml/omar/server/interfaces/soap" includes="jaxrpc-ri.xml"/>
+        <webinf dir="${build.home}/org/freebxml/omar/common/jaxrpc/registry/server" includes="model-wsdl-rpcenc.xml.gz" defaultexcludes="no"/>
+
+        <!--The JAXB binding for ebXML Registry and the jaxb jars-->
+        <lib dir="${build.lib}" excludes="${appserver.excludes},${dbAllJars}">
+            <patternset refid="server.run.files"/>
+        </lib>
+        <classes dir="${build.classes}">
+            <include name="**/omar/common/**"/>
+            <include name="**/omar/server/**"/>
+	    <!-- Do not include any server LifecycleListener classes -->
+	    <exclude name="**/omar/server/container/**"/>
+        </classes>
+    </war>
+
+    <!--Patch the raw WAR into a deployable WAR. Using command version because wsdeploy has problems with endorsed jars -->
+    <!--wsdeploy
+         keep="true"
+         verbose="true"
+         inWarFile="${build.home}/org/freebxml/omar/server/interfaces/soap/registryRaw.war"
+         outWarFile="${build.home}/org/freebxml/omar/server/interfaces/soap/registry.war">
+         <classpath refid="server.compile.classpath"/>
+    </wsdeploy-->
+    <exec executable="${wsdeploy}">
+       <arg value="-keep"/>
+       <arg value="-verbose"/>
+       <arg value="-o"/>
+       <arg value="${build.home}/org/freebxml/omar/server/interfaces/soap/registry.war"/>
+       <arg value="-classpath"/>
+       <arg value="${build.classes}"/>
+       <arg value="${build.home}/org/freebxml/omar/server/interfaces/soap/registryRaw.war"/>
+    </exec>
+  </target>
+
+  <!-- ??? this target is presently unused, should it and
+       create.war.registry both be removed? -->
+  <target name="deploy.war.registry" depends="create.war.registry">
+     <delete dir="${catalina.base}/webapps/registry"/>
+     <copy file="${build.home}/org/freebxml/omar/server/interfaces/soap/registry.war" todir="${catalina.base}/webapps"/>
+  </target>
+
+  <target name="prepare.war"
+	  depends="prepare,compile,jars,prepare-web.xml,prepare.war.webstart">
+    <!-- docbase -->
+    <copy todir="${build.webapps}">
+      <fileset dir="${omar.conf}">
+        <include name="errorpage.html"/>
+      </fileset>
+      <fileset dir="${src.home}/jsp/org/freebxml/omar/client/ui/thin">
+        <include name="**/*.jsp"/>
+      </fileset>
+      <fileset dir="${src.home}/html/org/freebxml/omar/client/ui/thin">
+        <include name="*.html"/>
+        <include name="*.css"/>
+        <include name="*.js"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc">
+      <fileset dir="${omar.basedir}/doc/3.0">
+        <include name="*.html"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/images">
+      <fileset dir="${omar.basedir}/doc/3.0/images">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/thinBrowser">
+      <fileset dir="${omar.basedir}/doc/3.0/thinBrowser">
+        <include name="*.html"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/thinBrowser/images">
+      <fileset dir="${omar.basedir}/doc/3.0/thinBrowser/images">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/registryBrowser">
+      <fileset dir="${omar.basedir}/doc/3.0/registryBrowser">
+        <include name="*.html"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/registryBrowser/images">
+      <fileset dir="${omar.basedir}/doc/3.0/registryBrowser/images">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/developer">
+      <fileset dir="${omar.basedir}/doc/3.0/developer">
+        <include name="*.html"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/doc/developer/images">
+      <fileset dir="${omar.basedir}/doc/3.0/developer/images">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${build.webapps}/images">
+      <fileset dir="${src.home}/images/org/freebxml/omar/client/ui/thin">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <!-- WEB-INF -->
+    <copy todir="${build.webapps}/WEB-INF">
+      <fileset dir="${omar.basedir}/conf">
+        <include name="faces-config.xml"/>
+      </fileset>
+      <fileset dir="${src.java}/org/freebxml/omar/client/ui/thin/components/taglib">
+        <include name="components.tld"/>
+      </fileset>
+      <fileset dir="${src.home}/xml/org/freebxml/omar/client/ui/thin">
+        <include name="**/*"/>
+      </fileset>
+      <fileset dir="${build.home}/conf">
+        <include name="web.xml"/>
+      </fileset>
+    </copy>
+    <!-- lib -->
+    <copy todir="${build.webapps}/WEB-INF/lib">
+      <fileset dir="${build.lib}"
+	       excludes="${appserver.excludes},${dbAllJars}">
+        <patternset refid="server.run.files"/>
+        <patternset refid="thin.client.run.files"/>
+	<!-- Do not copy client classes we will include in bare form -->
+	<exclude name="jaxr-ebxml.jar"/>
+	<!-- Do not copy common classes we will include in bare form -->
+	<exclude name="omar-common.jar"/>
+      </fileset>
+    </copy>
+        
+    <!-- If using JDK 1.4, copy custom Sun JAXP Xerces/Xalan jars from JWSDP 1.6. Workaround for SAAJ "Unable to internalize message" exception -->
+    <condition property="copySunJAXPJarsAuto">
+        <and>
+            <isset property="build.lib.endorsed"/>
+            <equals arg1="${copySunJAXPJars.Mode}" arg2="auto" casesensitive="false" trim="true"/>
+        </and>
+    </condition>
+        
+    <antcall target="copySunJAXPJarsAuto"/>      
+        
+    <!-- classes -->
+    <copy todir="${build.webapps}/WEB-INF/classes">
+      <fileset dir="${build.classes}">
+	<exclude name="jaxr-ebxml.properties"/>
+	<exclude name="omar.properties"/>
+	<exclude name="repository.jdbc.cfg.xml"/>
+	<!-- Do not copy the Admin Tool classes -->
+	<exclude name="**/omar/client/admin/**"/>
+	<!-- Do not copy the UI config bindings (if built locally) -->
+	<exclude name="${relative.dir.ui.bindings}/**"/>
+	<!-- Do not copy the browser classes -->
+	<exclude name="**/omar/client/ui/swing/**"/>
+	<!-- Do not copy any server LifecycleListener classes -->
+	<exclude name="**/omar/server/container/**"/>
+      </fileset>
+      <fileset dir="${build.home}/conf">
+        <include name="*.properties"/>
+        <include name="*.xml"/>
+	<!-- Avoid files handled elsewhere -->
+	<exclude name="faces-config.xml"/>
+	<exclude name="jaxr-ebxml.properties"/>
+	<exclude name="omar.properties"/>
+	<exclude name="sun-coding-convention.xml"/>
+	<exclude name="web.xml"/>
+      </fileset>
+      <fileset dir="${src.resources}">
+        <include name="**/*.properties"/>
+      </fileset>
+      <!-- Following covers much of what is excluded just above -->
+      <fileset dir="${build.home}/conf/deploy"/>
+    </copy>
+  </target>
+
+    
+   <!-- If using JDK 1.4, copy custom Sun JAXP Xerces/Xalan jars from JWSDP 1.6. Workaround for SAAJ "Unable to internalize message" exception -->
+   <target name="copySunJAXPJarsAuto" if="copySunJAXPJarsAuto">
+      <property name="copySunJAXPJarsExecute" value="true"/>
+        
+      <condition property="destinationDir" value="${build.webapps}/WEB-INF/lib" >
+        <equals arg1="${copySunJAXPJars.Destination}" arg2="webapp" casesensitive="false" trim="true"/>
+      </condition>
+        
+      <property name="destinationDir" value="${catalina.home}/common/endorsed"/>  <!-- else condition -->
+      
+      <antcall target="copySunJAXPJarsExecute">    
+        <param name="destinationDir" value="${destinationDir}"/> 
+      </antcall>
+   </target>
+        
+    <target name="copySunJAXPJars" description="Manually copy custom Sun JAXP Xerces/Xalan jars from JWSDP 1.6">
+      <condition property="copySunJAXPJarsExecute">
+        <isset property="build.lib.endorsed"/>
+      </condition>
+        
+      <condition property="destinationDir" value="${deploy.home}/${omar.name}/WEB-INF/lib" >
+        <equals arg1="${copySunJAXPJars.Destination}" arg2="webapp" casesensitive="false" trim="true"/>
+      </condition>
+        
+      <property name="destinationDir" value="${catalina.home}/common/endorsed"/>  <!-- else condition -->
+            
+      <antcall target="copySunJAXPJarsExecute">    
+        <param name="destinationDir" value="${destinationDir}"/> 
+      </antcall>
+   </target>
+    
+   <target name="copySunJAXPJarsExecute" if="copySunJAXPJarsExecute">
+     <echo message="Copying custom Sun JAXP Xerces/Xalan jars from JWSDP 1.6..."/>
+     <copy file="${libs.xalan.jar}"
+	   tofile="${destinationDir}/sunJAXPXalan.jar"/>
+     <copy file="${libs.xercesImpl.jar}"
+	   tofile="${destinationDir}/sunJAXPXercesImpl.jar"/>
+  </target>
+
+    
+  <target name="war" depends="prepare.war">
+    <jar destfile="${build.home}/${omar.name}.war">
+      <fileset dir="${build.webapps}">
+        <include name="**/*"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <!-- ======================================================== -->
+  <!-- Targets for Notification Services                        -->
+  <!-- ======================================================== -->
+
+  <target name="-check.client.2.5.notificationListener">
+    <check.wscompile configRoot="${src.xml}"
+		     expectedClass="NotificationListenerPortType"
+		     genTarget="client"
+		     guardProperty="skip.client.2.5.notificationListener"
+		     relativePath="server/event/listener/client"
+		     specVersion="2.5"/>
+  </target>
+
+  <target name="generate.client.2.5.notificationListener"
+	  depends="-check.client.2.5.notificationListener"
+	  unless="skip.client.2.5.notificationListener">
+    <wscompile configRoot="${src.xml}"
+	       genTarget="client"
+	       relativePath="server/event/listener/client"/>
+  </target>
+
+  <target name="-check.server.2.5.notificationListener">
+    <check.wscompile configRoot="${src.xml}"
+		     expectedClass="NotificationListenerPortType"
+		     genTarget="server"
+		     guardProperty="skip.server.2.5.notificationListener"
+		     relativePath="server/event/listener/server"
+		     specVersion="2.5"/>
+  </target>
+
+  <target name="generate.server.2.5.notificationListener"
+	  depends="-check.server.2.5.notificationListener"
+	  unless="skip.server.2.5.notificationListener">
+    <wscompile configRoot="${src.xml}"
+	       genTarget="server"
+	       relativePath="server/event/listener/server"/>
+  </target>
+
+  <target name="-check.client.notificationListener">
+    <check.wscompile expectedClass="NotificationListenerPortType"
+		     genTarget="client"
+		     guardProperty="skip.client.notificationListener"
+		     relativePath="common/jaxrpc/notificationListener/client"/>
+  </target>
+
+  <target name="generate.client.notificationListener"
+	  depends="-check.client.notificationListener"
+	  unless="skip.client.notificationListener">
+    <wscompile genTarget="client"
+	       relativePath="common/jaxrpc/notificationListener/client"/>
+  </target>
+
+  <target name="-check.server.notificationListener">
+    <check.wscompile expectedClass="NotificationListenerPortType"
+		     genTarget="server"
+		     guardProperty="skip.server.notificationListener"
+		     relativePath="common/jaxrpc/notificationListener/server"/>
+  </target>
+
+  <target name="generate.server.notificationListener"
+	  depends="-check.server.notificationListener"
+	  unless="skip.server.notificationListener">
+    <wscompile genTarget="server"
+	       relativePath="common/jaxrpc/notificationListener/server"/>
+  </target>
+
+  <target name="create.war.notificationListener"
+	  depends="compile,generate.server.2.5.notificationListener"
+	  if="can.use.ebxmlrr-spec">
+    <war destfile="${build.home}/org/freebxml/omar/server/event/listener/server/NotificationListenerRaw.war"
+         webxml="src/xml/org/freebxml/omar/server/event/listener/server/web.xml">
+        <webinf dir="${ebxmlrr-spec.home}/misc/3.0/services" includes="NotificationListener*.wsdl"/>
+        <webinf dir="src/xml/org/freebxml/omar/server/event/listener/server" includes="jaxrpc-ri.xml"/>
+        <webinf dir="${build.home}/org/freebxml/omar/server/event/listener/server" includes="model-wsdl-rpcenc.xml.gz" defaultexcludes="no"/>
+
+        <!--The JAXB binding for ebXML Registry and the jaxb jars-->
+        <lib dir="${build.lib}" excludes="${appserver.excludes}">
+            <include name="oasis-regrep.jar"/>
+            <include name="saaj*.jar"/>
+            <include name="jaxrpc*.jar"/>
+            <include name="jax-qname.jar"/>
+            <patternset refid="jaxb.files"/>
+        </lib>
+        <classes dir="${build.classes}">
+            <include name="**/omar/common/**"/>
+            <include name="**/omar/server/event/listener/server/**"/>
+        </classes>
+    </war>
+
+    <!--Patch the raw WAR into a deployable WAR -->
+    <!--wsdeploy
+         keep="true"
+         verbose="true"
+         inWarFile="${build.home}/org/freebxml/omar/server/event/listener/server/NotificationListenerRaw.war"
+         outWarFile="${build.home}/org/freebxml/omar/server/event/listener/server/NotificationListener.war">
+         <classpath refid="server.compile.classpath"/>
+    </wsdeploy-->
+
+    <!-- ??? Note: This action creates a non-portable war file.  It is
+         bound to a specific JAX-RPC version.  Fine for Tomcat; not a good
+         idea for J2EE-compliant containers (which include JAX-RPC by
+         definition) -->
+    <exec executable="${wsdeploy}">
+       <arg value="-keep"/>
+       <arg value="-o"/>
+       <arg value="${build.home}/org/freebxml/omar/server/event/listener/server/NotificationListener.war"/>
+       <arg value="-classpath"/>
+       <arg value="${build.classes}"/>
+       <arg value="${build.home}/org/freebxml/omar/server/event/listener/server/NotificationListenerRaw.war"/>
+    </exec>
+
+  </target>
+
+  <target name="deploy.war.notificationListener" depends="create.war.notificationListener">
+     <delete dir="${catalina.base}/webapps/NotificationListener"/>
+     <copy file="${build.home}/org/freebxml/omar/server/event/listener/server/NotificationListener.war" todir="${catalina.base}/webapps"/>
+  </target>
+
+  <!-- ======================================================== -->
+  <!-- Targets for Content Management Services                  -->
+  <!-- ======================================================== -->
+
+  <target name="-check.client.cms.cataloging">
+    <check.wscompile expectedClass="ContentCatalogingServicePortType"
+		     genTarget="client"
+		     guardProperty="skip.client.cms.cataloging"
+		     relativePath="common/jaxrpc/cms/cataloging/client"/>
+  </target>
+
+  <target name="generate.client.cms.cataloging"
+	  depends="-check.client.cms.cataloging"
+	  unless="skip.client.cms.cataloging">
+    <wscompile extraFeature1="explicitcontext"
+	       genTarget="client"
+	       relativePath="common/jaxrpc/cms/cataloging/client"/>
+  </target>
+
+  <target name="-check.client.cms.validation">
+    <check.wscompile expectedClass="ContentValidationServicePortType"
+		     genTarget="client"
+		     guardProperty="skip.client.cms.validation"
+		     relativePath="common/jaxrpc/cms/validation/client"/>
+  </target>
+
+  <target name="generate.client.cms.validation"
+	  depends="-check.client.cms.validation"
+	  unless="skip.client.cms.validation">
+    <wscompile extraFeature1="explicitcontext"
+	       genTarget="client"
+	       relativePath="common/jaxrpc/cms/validation/client"/>
+  </target>
+
+  <target name="generate.client.cms"
+	  depends="generate.client.cms.cataloging,
+		   generate.client.cms.validation"/>
+
+  <target name="-check.server.cms.cataloging">
+    <check.wscompile expectedClass="ContentCatalogingServicePortType"
+		     genTarget="server"
+		     guardProperty="skip.server.cms.cataloging"
+		     relativePath="common/jaxrpc/cms/cataloging/server"/>
+  </target>
+
+  <target name="generate.server.cms.cataloging"
+	  depends="-check.server.cms.cataloging"
+	  unless="skip.server.cms.cataloging">
+    <wscompile extraFeature1="novalidation"
+	       genTarget="server"
+	       relativePath="common/jaxrpc/cms/cataloging/server"/>
+  </target>
+
+  <target name="-check.server.cms.validation">
+    <check.wscompile expectedClass="ContentValidationServicePortType"
+		     genTarget="server"
+		     guardProperty="skip.server.cms.validation"
+		     relativePath="common/jaxrpc/cms/validation/server"/>
+  </target>
+
+  <target name="generate.server.cms.validation"
+	  depends="-check.server.cms.validation"
+	  unless="skip.server.cms.validation">
+    <wscompile genTarget="server"
+	       relativePath="common/jaxrpc/cms/validation/server"/>
+  </target>
+
+  <target name="generate.server.cms"
+	  depends="generate.server.cms.cataloging,
+		   generate.server.cms.validation"/>
+
+  <target name="deploy.war.validationTest"
+	  depends="deploy.war.validationTest.alwaysSucceed,
+		   deploy.war.validationTest.cppaValidation,
+		   deploy.war.validationTest.returnInvalidContentException,
+		   deploy.war.validationTest.throwRemoteException"/>
+
+  <macrodef name="deploy_war_validationTest">
+    <!-- attributes with defaults are used for cataloging overrides -->
+    <attribute name="srcPath"/>
+    <attribute name="subDir" default="validation"/>
+    <attribute name="warBasename"/>
+    <attribute name="wsdlFile" default="ValidationServices.wsdl"/>
+    <sequential>
+      <!-- create the war file -->
+      <mkdir dir="${build.home}/@{srcPath}" />
+      <war destfile="${build.home}/@{srcPath}/@{warBasename}Raw.war"
+	   webxml="${test.home}/@{srcPath}/web.xml">
+	<webinf dir="${ebxmlrr-spec.home}/misc/3.0/services"
+		includes="@{wsdlFile} CMS*.wsdl"/>
+	<webinf dir="${test.home}/@{srcPath}" includes="jaxrpc-ri.xml"/>
+	<webinf dir="${build.home}/org/freebxml/omar/common/jaxrpc/cms/@{subDir}/server"
+		includes="model-wsdl-rpcenc.xml.gz"
+		defaultexcludes="no"/>
+
+	<!--The JAXB binding for ebXML Registry and the jaxb jars-->
+	<lib dir="${build.lib}" excludes="${appserver.excludes}">
+	  <patternset refid="jaxr.provider.run.files"/>
+	  <include name="oasis-regrep.jar"/>
+	  <include name="oasis-saml1.1.jar"/>
+	  <include name="oasis-regrep.jar"/>
+	  <include name="saaj*.jar"/>
+	  <include name="jaxrpc*.jar"/>
+	  <include name="jax-qname.jar"/>
+	  <patternset refid="jaxb.files"/>
+	</lib>
+	<classes dir="${build.classes}">
+	  <include name="**/@{srcPath}/**"/>
+	  <include name="commons-logging.properties"/>
+	  <include name="log4j.properties"/>
+	  <include name="simplelog.properties"/>
+	</classes>
+	<classes dir="${build.home}/test/classes">
+	  <include name="**/omar/common/**"/>
+	  <include name="**/service/*"/>
+	  <include name="**/@{subDir}Test/*"/>
+	  <include name="**/@{srcPath}/**"/>
+	</classes>
+
+	<fileset file="${test.home}/@{srcPath}/*.html"/>
+      </war>
+
+      <exec executable="${wsdeploy}">
+	<arg value="-keep"/>
+	<arg value="-o"/>
+	<arg value="${build.home}/@{srcPath}/@{warBasename}.war"/>
+	<arg value="-classpath"/>
+	<arg value="${build.classes}"/>
+	<arg value="${build.home}/@{srcPath}/@{warBasename}Raw.war"/>
+      </exec>
+
+      <!-- finally, deploy our new war file -->
+      <delete dir="${catalina.base}/webapps/@{warBasename}"/>
+      <copy file="${build.home}/@{srcPath}/@{warBasename}.war"
+	    todir="${catalina.base}/webapps"/>
+    </sequential>
+  </macrodef>
+
+  <target name="deploy.war.validationTest.cppaValidation"
+	  depends="compile, generate.server.cms"
+	  if="can.use.ebxmlrr-spec">
+    <deploy_war_validationTest
+	srcPath="org/freebxml/omar/service/validationTest/cppaValidation"
+	warBasename="ValidationTestCPPAValidation"/>
+  </target>
+
+  <target name="deploy.war.validationTest.alwaysSucceed"
+	  depends="compile, generate.server.cms"
+	  if="can.use.ebxmlrr-spec">
+    <deploy_war_validationTest
+	srcPath="org/freebxml/omar/service/validationTest/alwaysSucceed"
+	warBasename="ValidationTestAlwaysSucceed"/>
+  </target>
+
+  <target name="deploy.war.validationTest.returnInvalidContentException"
+	  depends="compile, generate.server.cms"
+	  if="can.use.ebxmlrr-spec">
+    <deploy_war_validationTest
+	srcPath="org/freebxml/omar/service/validationTest/returnInvalidContentException"
+	warBasename="ValidationTestReturnInvalidContentException"/>
+  </target>
+
+  <target name="deploy.war.validationTest.throwRemoteException"
+	  depends="compile, generate.server.cms"
+	  if="can.use.ebxmlrr-spec">
+    <deploy_war_validationTest
+	srcPath="org/freebxml/omar/service/validationTest/throwRemoteException"
+	warBasename="ValidationTestThrowRemoteException"/>
+  </target>
+
+  <target name="deploy.war.catalogingTest.cppaCataloging"
+	  depends="compile, generate.server.cms"
+	  if="can.use.ebxmlrr-spec">
+    <deploy_war_validationTest
+	srcPath="org/freebxml/omar/service/catalogingTest/cppaCataloging"
+	subDir="cataloging"
+	warBasename="CatalogingTestCPPACataloging"
+	wsdlFile="CatalogingServices.wsdl"/>
+  </target>
+
+</project>

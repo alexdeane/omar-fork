@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-extDB.xml,v 1.10 2006/04/10 09:36:25 tonygraham Exp $-->
+<project basedir="." default="dummy" name="omar-build-extDB">
+
+<!-- Dummy default target, does nothing. -->
+<target name="dummy"/>
+
+<!-- ===================================================================== -->
+<!-- Contains targets related to building database with extension profiles -->
+<!-- ===================================================================== -->
+
+  <!-- Includes targets for various profiles for ebXML Registry. -->
+  <target name="createExtDB" depends="createMinDB, loadExtDB">
+    <echo message="Created a database with extension profiles"/>
+  </target>
+  <target name="loadExtDB" depends="i18n.extDB.ws, i18n.extDB.wsrp, loadWSProfile, loadWSRPProfile"/>
+
+  <target name="loadWSProfile" depends="i18n.extDB.ws">
+    <echo message="Loading Web Services Profile as RegistryOperator"/>
+    <soapSender req="${build.samples}/extDB/ws/SubmitObjectsRequest_WSProfile.xml">
+      <arg value="attach=${build.samples}/extDB/ws/InvocationControlFile_WSDLValidation.schematron,text/xml,urn:uuid:c66bdb4c-1587-4bce-8ea4-c0f60486d779"/>
+   </soapSender>
+  </target>
+
+  <target name="loadWSRPProfile" depends="i18n.extDB.wsrp">
+    <echo message="Loading WSRP Profile as RegistryOperator"/>
+    <soapSender req="${build.samples}/extDB/wsrp/SubmitObjectsRequest_WSRPProfile.xml"/>
+  </target>
+
+  <!-- ======================================================== -->
+  <!-- Target to localize extDB                                 -->
+  <!-- ======================================================== -->
+
+  <target name="i18n.extDB.ws" depends="jar.common">
+    <property name="extDB.ws.i18n.dir" location="${build.samples}/extDB/ws"/>
+    <mkdir dir="${extDB.ws.i18n.dir}"/>
+    <java classname="org.freebxml.omar.common.I18nXSLTTask"
+      fork="true" failonerror="true">
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <classpath>
+        <path refid="jaxr.client.compile.classpath"/>
+        <pathelement location="${src.resources}"/>
+      </classpath>
+      <arg value="-xsltFile"/>
+      <arg value="${src.xml}/org/freebxml/omar/common/I18n-rim.xsl"/>
+      <arg value="-sourceDir"/>
+      <arg value="${samples}/extDB/ws"/>
+      <arg value="-destDir"/>
+      <arg value="${extDB.ws.i18n.dir}"/>
+      <arg value="-bundleBaseName"/>
+      <arg value="misc.samples.extDB.ws.ResourceBundle"/>
+      <arg value="-localeList"/>
+      <arg value="${localeList}"/>
+    </java>
+    <!-- Manually copy other files than *.xml -->
+    <copy todir="${extDB.ws.i18n.dir}">
+      <fileset dir="${samples}/extDB/ws">
+        <include name="*"/>
+        <exclude name="*.xml"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="i18n.extDB.wsrp" depends="jar.common">
+    <property name="extDB.wsrp.i18n.dir" location="${build.samples}/extDB/wsrp"/>
+    <mkdir dir="${extDB.wsrp.i18n.dir}"/>
+    <java classname="org.freebxml.omar.common.I18nXSLTTask"
+      fork="true" failonerror="true">
+      <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+      <classpath>
+        <path refid="jaxr.client.compile.classpath"/>
+        <pathelement location="${src.resources}"/>
+      </classpath>
+      <arg value="-xsltFile"/>
+      <arg value="${src.xml}/org/freebxml/omar/common/I18n-rim.xsl"/>
+      <arg value="-sourceDir"/>
+      <arg value="${samples}/extDB/wsrp"/>
+      <arg value="-destDir"/>
+      <arg value="${extDB.wsrp.i18n.dir}"/>
+      <arg value="-bundleBaseName"/>
+      <arg value="misc.samples.extDB.wsrp.ResourceBundle"/>
+      <arg value="-localeList"/>
+      <arg value="${localeList}"/>
+    </java>
+    <!-- Manually copy other files than *.xml -->
+    <copy todir="${extDB.wsrp.i18n.dir}">
+      <fileset dir="${samples}/extDB/wsrp">
+        <include name="*"/>
+        <exclude name="*.xml"/>
+      </fileset>
+    </copy>
+  </target>
+
+</project>

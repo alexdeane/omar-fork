@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+$Header: /cvsroot/ebxmlrr/omar/src/java/org/freebxml/omar/server/interfaces/soap/jaxrpc-ri.xml,v 1.2 2004/03/14 17:51:31 farrukh_najmi Exp $
+-->
+
+<webServices
+    xmlns="http://java.sun.com/xml/ns/jax-rpc/ri/dd"
+    version="1.0"
+    targetNamespaceBase="urn:oasis:names:tc:ebxml-regrep:wsdl:NotificationListener:services:3.0"
+    typeNamespaceBase="urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0"
+    urlPatternBase="/registry">
+
+    <endpoint
+        name="QueryManager"
+        displayName="QueryManager"
+        description="QueryManager interface to ebXML Registry" 
+        wsdl="/WEB-INF/ebXMLRegistryServices.wsdl"
+        interface="org.freebxml.omar.common.jaxrpc.registry.server.QueryManagerPortType"  
+        implementation="org.freebxml.omar.server.interfaces.soap.QueryManagerPortTypeImpl" 
+        model="/WEB-INF/model-wsdl-rpcenc.xml.gz"/>
+ 
+    <endpoint
+        name="LifeCycleManager"
+        displayName="LifeCycleManager"
+        description="LifeCycleManager interface to ebXML Registry" 
+        wsdl="/WEB-INF/ebXMLRegistryServices.wsdl"
+        interface="org.freebxml.omar.common.jaxrpc.registry.server.LifeCycleManagerPortType"  
+        implementation="org.freebxml.omar.server.interfaces.soap.LifeCycleManagerPortTypeImpl" 
+        model="/WEB-INF/model-wsdl-rpcenc.xml.gz"/>
+ 
+    <endpointMapping
+        endpointName="QueryManager"
+        urlPattern="/queryManager"/>
+
+    <endpointMapping
+        endpointName="LifeCycleManager"
+        urlPattern="/lifeCycleManager"/>
+</webServices>

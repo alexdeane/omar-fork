@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/build-path.xml,v 1.36 2006/10/26 02:45:32 psterk Exp $-->
+<project basedir="." default="dummy" name="omar-build-path">
+
+<target name="dummy" description="Dummy default target, does nothing"/>
+
+<!-- ======================================================== -->
+<!--            File Patternsets and Classpaths               -->
+<!-- ======================================================== -->
+
+<!-- default mapping for omar-common.jar, jaxr-ebxml.jar, admin-tool.jar
+     removes ${build.lib}${file.separator}; in particular, this mapping is
+     used when converting 'common.run.classpath',
+     'jaxr.provider.run.classpath', and 'adminTool.run.classpath' -->
+<mapper id="manifest.mapper"
+	from="${build.lib}${file.separator}*"
+	to="*"
+	type="glob"/>
+
+<!--
+A Path can have N FileSets.
+A FileSet can have N PatternSets
+A PatternSet can have N include and excludes
+-->
+
+<patternset id="ant.files">
+    <include name="ant.jar"/>
+    <include name="ant-launcher.jar"/>
+    <include name="ant-nodeps.jar"/>
+</patternset>
+<path id="ant.classpath">
+    <fileset dir="${build.lib}">
+        <patternset refid="ant.files"/>
+    </fileset>
+</path>
+
+<!-- Base patternset and classpath needed to use JAXB (compile and run). -->
+<patternset id="jaxb.files">
+    <include name="jax-qname.jar"/>
+    <include name="jaxb-api.jar"/>
+    <include name="jaxb-impl.jar"/>
+    <include name="jaxb-libs.jar"/>
+    <include name="jaxb-xjc.jar"/>
+    <include name="xsdlib.jar"/>
+    <include name="namespace.jar"/>
+    <include name="relaxngDatatype.jar"/>
+</patternset>
+
+<path id="jaxb.classpath">
+	<fileset dir="${build.lib}">
+		<patternset refid="jaxb.files"/>
+	</fileset>
+</path>
+
+<!-- Base patternset and classpath needed to compile OMAR Common (used also by server and client). -->
+<patternset id="common.compile.files">
+  <include name="jaxr-api.jar"/>
+  <patternset refid="jaxb.files"/>
+  <include name="oasis-regrep.jar"/>
+  <include name="oasis-saml1.1.jar"/>
+  <include name="oasis-saml2.0.jar"/>
+  <!--include name="w3-dsig.jar"/-->
+  <include name="jaxrpc-api.jar"/>
+  <include name="jaxrpc-impl.jar"/>
+  <include name="jaxrpc-spi.jar"/>
+  <include name="saaj-api.jar"/>
+  <include name="xmldsig.jar"/>
+  <include name="xws-security.jar"/>
+  <include name="xws-saml.jar"/>
+  <include name="soapprocessor.jar"/>
+  <include name="FastInfoset.jar"/>
+  <include name="jsr173_api.jar"/>
+  <include name="activation.jar"/>
+  <include name="mail.jar"/>
+  <include name="commons-logging.jar"/>
+  <include name="xmlsec.jar"/>
+  <include name="servlet-api.jar"/>
+</patternset>
+
+<!--Additional impl files needed at run time by common jars -->
+<patternset id="common.run.files">
+  <include name="log4j.jar"/>
+  <include name="saaj-impl.jar"/>
+  <include name="xmlsec.jar"/>
+</patternset>
+
+<path id="common.compile.classpath">
+	<fileset dir="${build.lib}">
+		<patternset refid="common.compile.files"/>
+	</fileset>
+</path>
+
+<path id="common.run.classpath">
+  <fileset dir="${build.lib}">
+    <patternset refid="common.compile.files"/>
+    <patternset refid="common.run.files"/>
+  </fileset>
+</path>
+
+<!-- omar-common.jar extra classpath is empty by default -->
+<path id="common.extra.classpath"/>
+
+<!--Hibernate jars -->
+<patternset id="hibernate.run.files">
+  <include name="hibernate2.jar"/>
+  <include name="dom4j-1.4.jar"/>
+  <!-- log4j is optional here -->
+  <include name="log4j.jar"/>
+  <include name="cglib-full-2.0.2.jar"/>
+  <include name="jta.jar"/>
+  <include name="commons-collections.jar"/>
+  <include name="commons-logging.jar"/>
+  <include name="ehcache-0.9.jar"/>
+  <include name="odmg-3.0.jar"/>
+</patternset>
+<path id="hibernate.run.classpath">
+  <fileset dir="${build.lib}">
+    <patternset refid="hibernate.run.files"/>
+  </fileset>
+</path>
+
+
+<!-- Base patternset and classpath needed to compile omar server application. -->
+<patternset id="server.compile.files">
+	<patternset refid="common.compile.files"/>
+  <patternset refid="hibernate.run.files"/>
+  <include name="concurrent.jar"/>
+  <include name="sunxacml.jar"/>
+</patternset>
+
+<path id="server.compile.classpath">
+  <path refid="common.compile.classpath"/>
+	<fileset dir="${build.lib}">
+		<patternset refid="server.compile.files"/>
+	</fileset>
+  <!--Following uncommented during dev of XACML work if needed -->
+  <!--pathelement path="${build.home}/../../sunxacml/build/classes"/-->
+</path>
+
+<!-- In the future, may split up more to support non-Derby or non-Tomcat
+     listeners -->
+<path id="tomcat.compile.classpath">
+  <path refid="server.compile.classpath"/>
+  <fileset dir="${build.lib}" includes="${dbDeploymentJars}"/>
+  <fileset dir="${catalina.home}">
+    <include name="server/lib/catalina.jar"/>
+  </fileset>
+</path>
+
+<path id="xjc.classpath">
+  <fileset dir="${build.lib}" includes="*.jar"/>
+</path>
+
+<target name="define.xjc">
+  <taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
+    <classpath refid="xjc.classpath"/>
+  </taskdef>
+</target>
+
+<!-- Base patternset and classpath needed to run omar server application. -->
+<patternset id="server.run.files" includes="${dbAllJars}">
+    <patternset refid="common.run.files"/>
+    <patternset refid="server.compile.files"/>
+</patternset>
+<path id="server.run.classpath">
+  <pathelement path="${build.classes}"/>
+	<fileset dir="${build.lib}">
+		<patternset refid="server.run.files"/>
+	</fileset>
+  <!--path refid="server.run.classpath.mayneed"/-->
+</path>
+
+<path id="server.run.classpath.mayneed">
+  <!-- Need to see if these are really needed -->
+  <pathelement path="${build.lib}/xml-apis.jar"/>
+  <pathelement path="${build.lib}/xmlParserAPIs.jar"/>
+  <pathelement path="${build.lib}/bc-jce-jdk13-111.jar"/>
+</path>
+
+<path id="test.compile.classpath">
+  <path refid="server.compile.classpath"/>
+  <path refid="jaxr.provider.compile.classpath"/>
+  <path refid="thin.client.compile.classpath"/>
+  <path refid="jaxr.browser.compile.classpath"/>
+  <pathelement path="${build.classes}"/>
+  <pathelement path="${build.test}/classes"/>
+  <pathelement path="${build.lib}/junit.jar"/>
+
+  <pathelement path="${file.japex.japex.jar}"/>
+  <pathelement path="${file.japex.jaxb-api.jar}"/>
+  <pathelement path="${file.japex.jaxb-impl.jar}"/>
+  <pathelement path="${file.japex.jaxb-xjc.jar}"/>
+  <pathelement path="${file.japex.jaxb1-impl.jar}"/>
+  <pathelement path="${file.japex.jcommon.jar}"/>
+  <pathelement path="${file.japex.jfreechart.jar}"/>
+
+  <!--pathelement path="${build.lib}/junitperf.jar"/-->
+</path>
+
+<path id="test.run.classpath">
+  <path refid="server.run.classpath"/>
+  <pathelement path="${build.classes}"/>
+  <pathelement path="${build.test}/classes"/>
+  <pathelement path="${build.lib}/junit.jar"/>
+  <!--pathelement path="${build.lib}/junitperf.jar"/-->
+</path>
+
+
+<!-- Base classpath needed to compile a generic JAXR client program. -->
+<patternset id="jaxr.client.compile.files">
+  <patternset refid="common.compile.files"/>
+  <include name="omar-common.jar"/>
+</patternset>
+<path id="jaxr.client.compile.classpath">
+  <fileset dir="${build.lib}">
+      <patternset refid="jaxr.client.compile.files"/>
+  </fileset>
+</path>
+
+<!-- Classpath used to compile the JAXR ebXML provider only -->
+<patternset id="jaxr.provider.compile.files">
+    <patternset refid="jaxr.client.compile.files"/>
+</patternset>
+<path id="jaxr.provider.compile.classpath">
+  <fileset dir="${build.lib}">
+      <patternset refid="jaxr.provider.compile.files"/>
+  </fileset>
+</path>
+
+<!-- Classpath used to run the JAXR ebXML provider only -->
+<patternset id="jaxr.provider.run.files">
+    <patternset refid="jaxr.provider.compile.files"/>
+    <patternset refid="common.run.files"/>
+</patternset>
+<path id="jaxr.provider.run.classpath">
+  <fileset dir="${build.lib}">
+      <patternset refid="jaxr.provider.run.files"/>
+  </fileset>
+</path>
+
+<!-- jaxr-ebxml.jar extra classpath is empty by default -->
+<path id="jaxr.provider.extra.classpath"/>
+
+<!-- Classpath used to compile the Registry Browser client -->
+<patternset id="ui.common.compile.files">
+  <patternset refid="jaxr.provider.compile.files"/>
+  <include name="${jaxr.provider.name}.jar"/>
+  <include name="omar-common.jar"/>
+  <include name="commons-logging.jar"/>
+  <include name="${ui.conf.bindings.lib}"/>
+  <include name="jsf-api.jar"/>
+</patternset>
+
+<patternset id="jaxr.browser.compile.files">
+  <patternset refid="ui.common.compile.files"/>
+  <include name="jgraph.jar"/>
+</patternset>
+
+<path id="jaxr.browser.compile.classpath">
+  <fileset dir="${build.lib}">
+      <patternset refid="jaxr.browser.compile.files"/>
+  </fileset>
+</path>
+
+<patternset id="jaxr.browser.run.files">
+    <patternset refid="jaxr.browser.compile.files"/>
+    <patternset refid="jaxr.provider.run.files"/>
+</patternset>
+<path id="jaxr.browser.run.classpath">
+  <fileset dir="${build.lib}">
+      <patternset refid="jaxr.browser.run.files"/>
+  </fileset>
+</path>
+
+<!-- Classpath used to compile thin client files -->
+<patternset id="thin.client.compile.files">
+  <patternset refid="ui.common.compile.files"/>
+  <include name="jstl.jar"/>
+  <include name="jsp-api.jar"/>
+  <include name="servlet-api.jar"/>
+</patternset>
+
+<path id="thin.client.compile.classpath">
+  <fileset dir="${build.lib}">
+      <patternset refid="thin.client.compile.files"/>
+  </fileset>
+</path>
+
+
+<patternset id="thin.client.run.files">
+  <patternset refid="thin.client.compile.files"/>
+  <include name="commons-digester.jar"/>
+  <include name="commons-collections.jar"/>
+  <include name="commons-beanutils.jar"/>
+  <include name="standard.jar"/>
+  <include name="jsf-impl.jar"/>
+</patternset>
+
+
+<!-- Classpath used to compile the admin tool -->
+<!--patternset id="adminTool.common.files">
+    <include name="${jaxr.provider.name}.jar"/>
+    <include name="omar-common.jar"/>
+    <include name="commons-logging.jar"/>
+</patternset-->
+
+<patternset id="adminTool.compile.files">
+    <patternset refid="ant.files"/>
+    <patternset refid="jaxr.client.compile.files"/>
+</patternset>
+<path id="adminTool.compile.classpath">
+  <fileset dir="${build.lib}">
+    <patternset refid="adminTool.compile.files"/>
+  </fileset>
+</path>
+
+<patternset id="adminTool.run.files">
+    <include name="activation.jar"/>
+    <include name="ant.jar"/>
+    <include name="commons-logging.jar"/>
+    <include name="jaxb-api.jar"/>
+    <include name="jaxb-impl.jar"/>
+    <include name="jaxb-xjc.jar"/>
+    <include name="jaxr-api.jar"/>
+    <include name="${jaxr.provider.name}.jar"/>
+    <include name="oasis-regrep.jar"/>
+    <include name="oasis-saml1.1.jar"/>
+    <include name="oasis-saml2.0.jar"/>
+    <include name="omar-common.jar"/>
+    <include name="saaj-api.jar"/>
+    <include name="saaj-impl.jar"/>
+</patternset>
+<path id="adminTool.run.classpath">
+  <fileset dir="${build.lib}">
+    <patternset refid="adminTool.run.files"/>
+  </fileset>
+</path>
+
+<!-- admin-tool.jar extra classpath is empty by default -->
+<path id="adminTool.extra.classpath"/>
+
+<!-- Classpath used to compile JAXR ebXML provider tests -->
+<patternset id="jaxr.test.common.files">
+    <include name="${jaxr.provider.name}.jar"/>
+    <include name="${jaxr.admin.name}.jar"/>
+    <include name="junit.jar"/>
+    <!--include name="junitperf.jar"/-->
+</patternset>
+
+<patternset id="jaxr.test.compile.files">
+    <patternset refid="jaxr.provider.compile.files"/>
+    <patternset refid="jaxr.test.common.files"/>
+</patternset>
+
+<path id="jaxr.test.compile.classpath">
+  <fileset dir="${build.lib}">
+    <patternset refid="jaxr.test.compile.files"/>
+  </fileset>
+</path>
+
+<patternset id="jaxr.test.run.files">
+    <patternset refid="jaxr.test.common.files"/>
+</patternset>
+
+<path id="jaxr.test.run.classpath">
+    <fileset dir="${build.lib}">
+        <patternset refid="jaxr.test.run.files"/>
+    </fileset>
+</path>
+
+<!-- Classpath required to run JAXR admin tool -->
+<patternset id="jaxr.admin.run.files">
+    <include name="${jaxr.provider.name}.jar"/>
+</patternset>
+
+<path id="jaxr.admin.run.classpath">
+  <fileset dir="${build.lib}">
+    <patternset refid="jaxr.admin.run.files"/>
+  </fileset>
+</path>
+
+<!-- What won't compile when using a classpath that matches current
+     ${soapSecurityProviderDir} value? -->
+<patternset id="compile.security.excludes">
+  <!-- depends on an exception which no longer exists in XWSS 2.0 FCS -->
+  <exclude
+      name="org/freebxml/omar/common/security/SoapSecurityUtilTest.java"
+      if="xwss20FCS.used"/>
+  <exclude name="org/freebxml/omar/common/security/xwssec10/**"
+	   unless="xwss10.used"/>
+  <exclude name="org/freebxml/omar/common/security/xwssec11/**"
+	   unless="xwss11.used"/>
+  <exclude name="org/freebxml/omar/common/security/xwssec20/**"
+	   unless="xwss20.used"/>
+  <exclude name="org/freebxml/omar/common/security/xwssec20FCS/**"
+	   unless="xwss20FCS.used"/>
+</patternset>
+
+</project>

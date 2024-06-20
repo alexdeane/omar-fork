@@ -1,0 +1,1029 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project basedir="." default="all" name="omar">
+    <description>The freebXML Registry Project</description>
+    <!-- $Header: /cvsroot/ebxmlrr/omar/build.xml,v 1.153 2007/02/09 20:26:39 farrukh_najmi Exp $ -->
+
+    <!-- Setting and using a property for basedir makes it easier to
+       import resolve relative filenames when this build file is
+       imported by anther build file. -->
+    <dirname property="omar.basedir" file="${ant.file.omar}"/>
+    
+    <!-- ===================== Property Definitions =========================== -->
+
+    <!-- The following is not completely general but is sufficient for
+       scripts used in this project. -->
+    <condition property="script.suffix" value="bat">
+        <os family="dos"/>
+    </condition>
+    <property name="script.suffix" value="sh"/>
+    
+    <!-- grab properties from environment for use in *build.properties -->
+    <property environment="env"/>
+    
+    <!-- load local and default properties -->
+    <property file="${omar.basedir}/local.build.properties"/>
+    <property name="build.properties" value="${omar.basedir}/build.properties"/>
+    <property file="${build.properties}"/>
+    
+    <property name="build.home" value="${omar.basedir}/build"/>
+    <property location="${build.home}/lib" name="build.lib"/>
+    <property location="${build.home}/test" name="build.test"/>
+    <property name="build.classes" value="${build.lib}/classes"/>
+    <property name="build.samples" location="${build.home}/samples"/>
+    <property name="test.home" value="${omar.basedir}/test"/>
+    <property name="src.home" value="${omar.basedir}/src"/>
+    <property name="src.java" value="${src.home}/java"/>
+    <property name="src.resources" value="${src.home}/resources"/>
+    <property name="src.xml" value="${src.home}/xml"/>
+    <property name="appserver-excludes.properties" value="appserver-excludes.properties"/>
+    <property file="${omar.basedir}/${appserver-excludes.properties}"/>
+    <property name="appserver.excludes" value="${pattern.none.excludes}"/>
+    <property name="omar.lib" value="${omar.basedir}/misc/lib"/>
+    <property name="omar.conf" value="${omar.basedir}/conf"/>
+    <property name="omar.conf.database" value="${omar.conf}/database"/>
+    <property name="ant.home" value="${omar.lib}"/>
+    <property name="app.name" value="omar"/>
+    <property name="app.version" value="0.1"/>
+    
+    <!-- extra parameter(s) for JAVA_OPTS when invoking catalina script -->
+    <property name="catalina.java.opts" value=""/>
+    
+    <property name="deploy.home" value="${catalina.base}/webapps"/>
+    <property name="dbDeploymentClass" value="${jdbcClassName}"/>
+    <property name="dbDeploymentPassword" value="${dbPassword}"/>
+    <property name="dbDeploymentStartServer" value="false"/>
+    <property name="dbDeploymentURL" value="${dbURL}"/>
+    <property name="dbDeploymentUsername" value="${dbUsername}"/>
+    <property name="dbDriverDir" value="${omar.lib}"/>
+    
+    <!--
+    The following limit is chosen to match ebXML Registry SQL Schema.
+    Databases have different physical limits for this parameter.
+    Oracle has the smallest known limit of 4000.
+    Deployments MAY choose to increase this parameter.
+  -->
+    <property name="dbAdhocQueryQueryLength" value="4096" />
+    
+    <condition property="dbAllJars" value="${dbDeploymentJars}">
+        <!-- simple case, ${dbDeploymentJars} contains ${jdbcDriver} -->
+        <contains string="${dbDeploymentJars}" substring="${jdbcDriver}"/>
+    </condition>
+    <!-- otherwise, ${dbDeploymentJars} and ${jdbcDriver} are distinct sets -->
+    <property name="dbAllJars" value="${dbDeploymentJars},${jdbcDriver}"/>
+    
+    <property name="dbDeploymentShutdownURL" value="${dbShutdownURL}"/>
+    <property name="jdbcDriver.fullpath" value="${build.lib}/${jdbcDriver}"/>
+    <property name="appserver-jndi-context.filename" value="jndi-context.xml"/>
+    <property name="omar.conf.xsl" value="${omar.conf}/xsl"/>
+    <property name="build.webapps" value="${build.home}/web/${omar.name}"/>
+    
+    <!-- locale list for populating localized content into minDB and extDB -->
+    <property name="localeList" value="en_US:fr:de:es:ko:ja:zh_CN:zh_TW"/>
+    
+    <!-- UI Config XML Schema, Bindings package and generated directory -->
+    <property name="package.ui.bindings"
+              value="org.freebxml.omar.client.ui.common.conf.bindings"/>
+    <property location=
+              "${src.java}/org/freebxml/omar/client/ui/common/conf/browserConfig.xsd"
+              name="file.ui.schema"/>
+    <property name="relative.dir.ui.bindings"
+              value="org/freebxml/omar/client/ui/common/conf/bindings"/>
+    <property location="${src.java}/${relative.dir.ui.bindings}"
+              name="dir.ui.bindings"/>
+    <!-- ============== Distribution properties ================== -->
+    <!-- The directory storing the zipped and gzipped distributions -->
+    <property name="distributions.home" value="distributions"/>
+    <!-- This directory is an image of the distribution files -->
+    <property name="dist.home" value="dist"/>
+    <!-- Directory for storing sample requests documents -->
+    <property name="samples" value="${omar.basedir}/misc/samples"/>
+    
+    <!-- TODO: fail if next 2 are overridden in build.properties -->
+    <property name="omar.url.soap" value="${omar.registry.baseurl}/soap"/>
+    <property name="omar.url.http" value="${omar.registry.baseurl}/http"/>
+    
+    <property name="omar.security.keystoreFile" value="${omar.home}/data/security/keystore.jks"/>
+    <property name="omar.security.keystoreType" value="jks"/>
+    <property name="omar.security.keystorePassword" value="ebxmlrr"/>
+    <property name="omar-setup.security.appserverTruststoreFile" value="${omar.home}/data/security/appserver-truststore.jks"/>
+    <property name="omar-setup.security.JVMCacertsFile" value="${java.home}/lib/security/cacerts"/>
+    <property name="omar-setup.security.appserverTruststorePassword" value="changeit"/>
+    <property name="client.debugSocket" value="1044"/>
+    <property name="server.debugSocket" value="1045"/>
+    <property name="test.debugSocket" value="1046"/>
+    <property name="adminTool.args" value=""/>
+    <basename property="soapSecurityProviderName" file="${soapSecurityProviderDir}"/>
+    
+    <!-- Following properties are defined in jaxr-ebxml.properties -->
+    <property name="jaxr-ebxml.security.keystoreFile" value="${omar.home}/jaxr-ebxml/security/keystore.jks"/>
+    <property name="jaxr-ebxml.security.jaas.callbackHandlerClassName"
+              value="org.freebxml.omar.client.xml.registry.jaas.DialogAuthenticationCallbackHandler"/>
+    <property name="testUserAlias" value="testuser"/>
+    <property name="testUserPass" value="testuserpasswd"/>
+    
+    <!-- A properties to control whether apache common logging is enabled -->
+    <property name="commonLib" value="omar-common.jar"/>
+    <property name="serverLib" value="omar-server.jar"/>
+    <property name="ui.conf.bindings.lib" value="omar-ui-conf-bindings.jar"/>
+    <!-- ==================== Compilation Control Options ==================== -->
+    <property name="compile.debug" value="true"/>
+    <property name="compile.deprecation" value="false"/>
+    <property name="compile.optimize" value="false"/>
+    <property name="compile.args" value="-g"/>
+    <!-- These properties enable pluggable sql scripts to support additional RDBMs vendors  -->
+    <property name="createdb.script" value="${build.home}/conf/database/database.sql"/>
+    <property name="cleandb.script" value="${build.home}/conf/database/cleanup.sql"/>
+    
+    <!-- Properties used to control compilation and testing of
+       common/security classes.  Derived from ${soapSecurityProviderDir},
+       which may be overidden in build.properties.  These should probably
+       not be overidden directly in that file however. -->
+    <condition property="xwss10.used">
+        <equals arg1="${soapSecurityProviderDir}"
+                arg2="org/freebxml/omar/common/security/xwssec10"/>
+    </condition>
+    <condition property="xwss11.used">
+        <equals arg1="${soapSecurityProviderDir}"
+                arg2="org/freebxml/omar/common/security/xwssec11"/>
+    </condition>
+    <condition property="xwss20.used">
+        <equals arg1="${soapSecurityProviderDir}"
+                arg2="org/freebxml/omar/common/security/xwssec20"/>
+    </condition>
+    <condition property="xwss20FCS.used">
+        <equals arg1="${soapSecurityProviderDir}"
+                arg2="org/freebxml/omar/common/security/xwssec20FCS"/>
+    </condition>
+    <condition property="xwss20x.used">
+        <or>
+            <istrue value="${xwss20.used}" />
+            <istrue value="${xwss20FCS.used}" />
+        </or>
+    </condition>
+    
+    <import file="${file.omar-build-compile}"/>
+    <import file="${file.omar-build-extDB}"/>
+    <import file="${file.omar-build-demoDB}"/>
+    <import file="${file.omar-build-minDB}"/>
+    <import file="${file.omar-build-nb4}"/>
+    <import file="${file.omar-build-path}"/>
+    <import file="${file.omar-build-setup}"/>
+    <import file="${file.omar-build-test}"/>
+    <import file="${file.omar-build-webstart}"/>
+    <import file="${file.omar-build-japex}"/>
+    <import file="${file.omar-user-build}"/>
+    
+    <target depends="usage" name="help"/>
+    <target name="usage">
+        <echo message=""/>
+        <echo message=""/>
+        <echo message="omar.home: ${omar.home}"/>
+        <echo message="keystore: ${omar.security.keystoreFile}"/>
+        <echo message="${app.name} Build instructions"/>
+        <echo message="-------------------------------------------------------------"/>
+        <echo message=""/>
+        <echo message=" While there are many more targets,"/>
+        <echo message=" The following hi-level target are typically used:"/>
+        <echo message=""/>
+        <echo message="   compile              --> Compiles everything"/>
+        <echo message="   doc                  --> Generates the API documentation"/>
+        <echo message="   genKeys              --> Builds KeyStore and loads it with keys for pre-defined Users"/>
+        <echo message="   createMinDB          --> Create the minimal database."/>
+        <echo message="   cleandb              --> Cleans all the tables at the database server"/>
+        <echo message="   genUUID [-Dcnt='cnt']--> Generates &lt;cnt> UUIDs and prints them out; default = 1"/>
+        <echo message="   deploy               --> Deploy to Tomcat"/>
+        <echo message="   war                  --> Create a WAR file in build dir"/>
+        <echo message="   test                 --> Test the installation"/>
+        <echo message="   testSQLQuery         --> Test SOAPSender SQL Query"/>
+        <echo message="   test.setCT           --> Set Conformance Test"/>
+        <echo message="   dist                 --> Create the zipped and gzipped source/binary distributions and packaged libraries"/>
+        <echo message="   clean                --> Cleans up all generated files and directories"/>
+        <echo message="   usage                --> Provides help on using the build tool"/>
+        <echo message=""/>
+        <echo message=" See comments inside the build.xml file for more details."/>
+        <echo message="-------------------------------------------------------------"/>
+        <echo message=""/>
+        <echo message=""/>
+    </target>
+    <target depends="clean,compile" description="Clean build and dist, then compile" name="all"/>
+    
+    <target name="init" description="Initializes required props and dirs">
+        <echo message="build.home = ${build.home}"/>
+        <echo message="build.classes = ${build.classes}" />
+        <echo message="build.properties = ${build.properties}" />
+        
+        <tstamp/>
+        <available file="${build.properties}" property="build.propExist"/>
+        <antcall target="build.proNotExist"/>
+        <mkdir dir="${build.home}"/>
+        <mkdir dir="${build.home}/conf"/>
+        <mkdir dir="${build.home}/conf/database"/>
+        <mkdir dir="${build.home}/doc"/>
+        <mkdir dir="${build.home}/doc/api"/>
+        <mkdir dir="${build.home}/doc/api/images"/>
+        <mkdir dir="${build.lib}"/>
+        <mkdir dir="${build.classes}"/>
+    </target>
+    
+    <!-- Figure out what we want added to jndi-context.xml (if anything) -->
+    <condition property="dbParams" value="">
+        <or>
+            <not>
+                <isset property="dbParamsFile"/>
+            </not>
+            <equals arg1="${dbParamsFile}" arg2="" trim="true"/>
+        </or>
+    </condition>
+    <target name="-read.dbParams" unless="dbParams">
+        <!-- This only gets executed when ${dbParamsFile} is set since default
+         ${dbParams} value is set above -->
+        <loadfile failonerror="false"
+                  property="dbParams"
+                  srcFile="${omar.conf.database}/${dbParamsFile}"/>
+    </target>
+    
+    <!-- Set up for filtering done during copies below -->
+    <filterset id="common.filters" begintoken="$$$$" endtoken="$$$$">
+        <filter token="omar.name" value="${omar.name}"/>
+        <filter token="DB_DIALECT" value="${dbDialect}"/>
+        <filter token="DB_LARGE_BINARY_TYPE" value="${dbLargeBinaryType}"/>
+        <filter token="DB_LARGE_BINARY_TYPE_LENGTH" value="${dbLargeBinaryTypePropLength}"/>
+        <filter token="ADHOCQUERY_QUERY_COL_LENGTH" value="${dbAdhocQueryQueryLength}"/>
+        <filter token="DB_NAME" value="${dbName}"/>
+        <filter token="DB_TRANSACTION_ISOLATION" value="${dbTransactionIsolation}"/>
+        <filter token="DIST-VERSION" value="${dist.version}"/>
+        <filter token="OMAR_SERVER_BASE_URL" value="${omar.registry.baseurl}"/>
+    </filterset>
+    <filterset id="client.filters" begintoken="$$$$" endtoken="$$$$">
+        <filter token="DB_CONFIG_DIR" value="."/>
+        <filter token="DB_DRIVER_CLASS" value="${jdbcClassName}"/>
+        <filter token="DB_LOG_DIR" value="."/>
+        <filter token="DB_PASSWORD" value="${dbPassword}"/>
+        <filter token="DB_POOLING" value="false"/>
+        <filter token="DB_SHUTDOWN_URL" value="${dbShutdownURL}"/>
+        <filter token="DB_START_SERVER" value="false"/>
+        <filter token="DB_URL" value="${dbURL}"/>
+        <filter token="DB_USERNAME" value="${dbUsername}"/>
+        <filter token="JAXR-EBXML.LOCALCALL" value="false"/>
+        <filter token="PRIME_CACHE_EVENT" value="never"/>
+    </filterset>
+    <filterset id="server.filters" begintoken="$$$$" endtoken="$$$$">
+        <filter token="DB_CONFIG_DIR" value="${catalina.base}/conf"/>
+        <filter token="DB_DRIVER_CLASS" value="${dbDeploymentClass}"/>
+        <filter token="DB_LOG_DIR" value="../logs"/>
+        <filter token="DB_PASSWORD" value="${dbDeploymentPassword}"/>
+        <filter token="DB_POOLING" value="true"/>
+        <filter token="DB_SHUTDOWN_URL" value="${dbDeploymentShutdownURL}"/>
+        <filter token="DB_START_SERVER" value="${dbDeploymentStartServer}"/>
+        <filter token="DB_URL" value="${dbDeploymentURL}"/>
+        <filter token="DB_USERNAME" value="${dbDeploymentUsername}"/>
+        <filter token="JAXR-EBXML.LOCALCALL" value="true"/>
+        <filter token="PRIME_CACHE_EVENT" value="${primeCacheEvent}"/>
+    </filterset>
+    <filterset id="default.filters" begintoken="$$$$" endtoken="$$$$">
+        <filter token="JAXR-EBXML.HOME"
+                value="jaxr-ebxml.home=$omar.home/jaxr-ebxml"/>
+        <filter token="JAXR-EBXML.HTTP"
+                value="jaxr-ebxml.http.url=${omar.url.http}"/>
+        <filter token="JAXR-EBXML.SOAP"
+                value="jaxr-ebxml.soap.url=${omar.url.soap}"/>
+        <filter token="OMAR.HOME" VALUE="omar.home=${omar.home.template}"/>
+        <filter token="OMAR.NAME" value="omar.name=${omar.name}"/>
+    </filterset>
+    <filterset id="nondefault.filters" begintoken="$$$$" endtoken="$$$$">
+        <filter token="JAXR-EBXML.HOME"
+                value="# jaxr-ebxml.home=$omar.home/jaxr-ebxml"/>
+        <filter token="JAXR-EBXML.HTTP"
+                value="# jaxr-ebxml.http.url=${omar.url.http}"/>
+        <filter token="JAXR-EBXML.SOAP"
+                value="# jaxr-ebxml.soap.url=${omar.url.soap}"/>
+        <filter token="OMAR.HOME" VALUE="# omar.home=${omar.home.template}"/>
+        <filter token="OMAR.NAME" value="# omar.name=${omar.name}"/>
+    </filterset>
+    
+    <available file=
+               "${build.classes}/org/freebxml/omar/server/common/omar-defaults.properties"
+               property="-have-prepared"
+               type="file"/>
+    <target name="overrideProperties"
+            description="Remove files that directly depend on build.properties
+            content.  Use when specifying ${omar.name} (for example) on the command line
+            or when returning to default values."
+            if="-have-prepared">
+        <!-- Bit over-zealous but will clean up most remnants of old properties -->
+        <delete>
+            <fileset dir="${build.home}/conf"/>
+            <!-- In case ${libs.*} properties have changed -->
+            <fileset file="${build.lib}/*.jar"/>
+            <fileset file=
+                     "${build.classes}/org/freebxml/omar/client/xml/registry/util/jaxr-ebxml-defaults.properties"/>
+            <fileset file=
+                     "${build.classes}/org/freebxml/omar/common/omar-common-defaults.properties"/>
+            <fileset file=
+                     "${build.classes}/org/freebxml/omar/server/common/omar-defaults.properties"/>
+        </delete>
+    </target>
+    
+    <target name="prepare"
+            depends="init,fix.dbURL,setup.omarhome,-read.dbParams">
+        <echo message="omar.home = ${omar.home}" />
+        <echo message="omar.home.template = ${omar.home.template}" />
+        
+        <!-- Bit over-zealous but will clean up most remnants of old properties -->
+        <dependset>
+            <srcfileset file="${build.properties}"/>
+            <srcfileset file="${omar.basedir}/build.xml"/>
+            <srcfileset file="${omar.conf.database}/${dbParamsFile}"/>
+            <targetfileset dir="${build.home}/conf"/>
+            <!-- In case ${libs.*} properties have changed -->
+            <targetfileset file="${build.lib}/*.jar"/>
+            <targetfileset file=
+                           "${build.classes}/org/freebxml/omar/client/xml/registry/util/jaxr-ebxml-defaults.properties"/>
+            <targetfileset file=
+                           "${build.classes}/org/freebxml/omar/common/omar-common-defaults.properties"/>
+            <targetfileset file=
+                           "${build.classes}/org/freebxml/omar/server/common/omar-defaults.properties"/>
+        </dependset>
+        
+        <!-- Copy 3rd party provided jars to build/lib -->
+        <copy todir="${build.lib}" flatten="true" failonerror="false">
+            <fileset file="${libs.jaxr-api.jar}"/>
+            
+            <fileset file="${libs.jaxb-api.jar}"/>
+            <fileset file="${libs.jaxb-impl.jar}"/>
+            <fileset file="${libs.jaxb-libs.jar}"/>
+            <fileset file="${libs.jaxb-xjc.jar}"/>
+            
+            <fileset file="${libs.jaxrpc-api.jar}"/>
+            <fileset file="${libs.jaxrpc-spi.jar}"/>
+            <fileset file="${libs.jaxrpc-impl.jar}"/>
+            
+            <fileset file="${libs.saaj-api.jar}"/>
+            <fileset file="${libs.saaj-impl.jar}"/>
+            
+            <fileset file="${libs.activation.jar}"/>
+            <fileset file="${libs.commons-beanutils.jar}"/>
+            <fileset file="${libs.commons-collections.jar}"/>
+            <fileset file="${libs.commons-digester.jar}"/>
+            <fileset file="${libs.commons-logging.jar}"/>
+            <fileset file="${libs.jaas.jar}"/>
+            <fileset file="${libs.jax-qname.jar}"/>
+            <fileset file="${libs.jta-spec1_0_1.jar}"/>
+            <fileset file="${libs.mail.jar}"/>
+            <fileset file="${libs.namespace.jar}"/>
+            <fileset file="${libs.relaxngDatatype.jar}"/>
+            <fileset file="${libs.xsdlib.jar}"/>
+            
+            <fileset file="${libs.servlet-api.jar}"/>
+            
+            <fileset file="${libs.jstl.jar}"/>
+            <fileset file="${libs.standard.jar}"/>
+            
+            <fileset file="${libs.ant.jar}"/>
+            <fileset file="${libs.ant-junit.jar}"/>
+            <fileset file="${libs.ant-launcher.jar}"/>
+            <fileset file="${libs.ant-nodeps.jar}"/>
+            <fileset file="${libs.ant-trax.jar}"/>
+            
+            <fileset file="${libs.xmldsig.jar}"/>
+            
+            <fileset file="${libs.xmlsec.jar}"/>
+            <fileset file="${libs.xws-security.jar}"/>
+            <fileset file="${libs.xws-saml.jar}"/>
+            <fileset file="${libs.soapprocessor.jar}"/>
+            <fileset file="${libs.FastInfoset.jar}"/>
+            <fileset file="${libs.jsr173_api.jar}"/>
+            
+            <fileset dir="${dbDriverDir}" includes="${dbAllJars}"/>
+        </copy>
+        
+        <!-- Copy lib to build/lib, filling in any gaps left above -->
+        <copy todir="${build.lib}" failonerror="false">
+            <fileset dir="${omar.lib}">
+                <!-- Select files not already in ${build.lib} -->
+                <present present="srconly" targetdir="${build.lib}"/>
+            </fileset>
+        </copy>
+        
+        <!-- Copy props from conf (cvs) to build/conf -->
+        <copy todir="${build.home}/conf">
+            <fileset dir="${omar.conf}">
+                <include name="ehcache.xml"/>
+                <include name="commons-logging.properties"/>
+                <include name="jaxr-ebxml.properties"/>
+                <include name="log4j.properties"/>
+                <include name="omar-common.properties"/>
+                <include name="omar.properties"/>
+                <include name="simplelog.properties"/>
+            </fileset>
+            <filterset refid="common.filters"/>
+            <filterset refid="client.filters"/>
+            <filterset refid="nondefault.filters"/>
+        </copy>
+        <copy todir="${build.home}/conf/database">
+            <fileset dir="${omar.conf.database}">
+                <include name="repository.datasource.cfg.xml"/>
+                <include name="repository.hbm.xml"/>
+                <include name="repository.jdbc.cfg.xml"/>
+                <include name="database.sql.template"/>
+            </fileset>
+            <filterset refid="common.filters"/>
+            <filterset refid="client.filters"/>
+            <filterset refid="nondefault.filters"/>
+        </copy>
+        
+        <!-- Copy props from conf (cvs) to each default location in classpath -->
+        <copy file="${omar.conf}/jaxr-ebxml.properties"
+              tofile="${build.classes}/org/freebxml/omar/client/xml/registry/util/jaxr-ebxml-defaults.properties">
+            <filterset refid="common.filters"/>
+            <filterset refid="client.filters"/>
+            <filterset refid="default.filters"/>
+        </copy>
+        <copy file="${omar.conf}/omar-common.properties"
+              tofile="${build.classes}/org/freebxml/omar/common/omar-common-defaults.properties">
+            <filterset refid="common.filters"/>
+            <filterset refid="client.filters"/>
+            <filterset refid="default.filters"/>
+        </copy>
+        <copy file="${omar.conf}/omar.properties"
+              tofile="${build.classes}/org/freebxml/omar/server/common/omar-defaults.properties">
+            <filterset refid="common.filters"/>
+            <filterset refid="client.filters"/>
+            <filterset refid="default.filters"/>
+        </copy>
+        
+        <!-- Copy files done differently for deployment configuration -->
+        <copy todir="${build.home}/conf/deploy">
+            <fileset dir="${omar.conf}">
+                <include name="jaxr-ebxml.properties"/>
+                <include name="omar.properties"/>
+            </fileset>
+            <fileset dir="${omar.conf.database}">
+                <include name="derby.properties"/>
+                <include name="repository.jdbc.cfg.xml"/>
+                <include name="database.sql.template"/>
+            </fileset>
+            <filterset refid="common.filters"/>
+            <filterset refid="server.filters"/>
+            <filterset refid="nondefault.filters"/>
+        </copy>
+        <!-- Very special case for jndi-context.xml -->
+        <copy tofile="${build.home}/conf/deploy/jndi-context.xml"
+              file="${omar.conf}/${appserver-jndi-context.filename}">
+            <filterset begintoken="$$$$" endtoken="$$$$">
+                <filter token="DB_PARAMS" value="${dbParams}"/>
+            </filterset>
+            <filterset refid="common.filters"/>
+            <filterset refid="server.filters"/>
+            <filterset refid="nondefault.filters"/>
+            <!-- Substitute $omar.name in jndi-context.xml -->
+            <filterset begintoken="$$" endtoken="e">
+                <filter token="omar.hom" value="${omar.home}"/>
+            </filterset>
+        </copy>
+        
+        <!-- Copy props from build/conf to classpath root-->
+        <copy todir="${build.classes}">
+            <fileset dir="${build.home}/conf">
+                <include name="omar.properties"/>
+                <include name="omar-common.properties"/>
+                <include name="jaxr-ebxml.properties"/>
+            </fileset>
+        </copy>
+        <!-- Copy Hibernate cfg files from build/conf to classpath root-->
+        <copy todir="${build.classes}">
+            <fileset dir="${build.home}/conf/database">
+                <include name="repository.datasource.cfg.xml"/>
+                <include name="repository.hbm.xml"/>
+                <include name="repository.jdbc.cfg.xml"/>
+            </fileset>
+        </copy>
+        <!-- Copy various other config and prop files from build/conf to classpath root -->
+        <copy todir="${build.classes}">
+            <fileset dir="${build.home}/conf">
+                <!-- Copy ehcache.xml file from build/conf to classpath root-->
+                <include name="ehcache.xml"/>
+                
+                <!-- Copy logging related prop files from build/conf to classpath root-->
+                <include name="commons-logging.properties"/>
+                <include name="log4j.properties"/>
+                <include name="simplelog.properties"/>
+            </fileset>
+            <fileset dir="${src.java}">
+                <!-- //TODO: move these files to src/resources -->
+                <include name="org/freebxml/omar/client/ui/common/conf/browserConfig.xsd"/>
+                <include name="org/freebxml/omar/client/ui/common/conf/registryBrowser.jnlp"/>
+                <include name="org/freebxml/omar/client/ui/swing/registration/Bundle.porperties"/>
+            </fileset>
+        </copy>
+        <!-- Copy icons resource files -->
+        <copy todir="${build.classes}">
+            <fileset dir="${omar.basedir}/misc/images" includes="icons/**/*.gif"/>
+        </copy>
+        <!-- Copy other resource files (bundles) -->
+        <copy todir="${build.classes}">
+            <fileset dir="${src.resources}"/>
+        </copy>
+        <!-- Copy associated test resource files -->
+        <copy todir="${build.home}/test/classes">
+            <fileset dir="${test.home}">
+                <include name="**/resources/**"/>
+                <include name="**/*.properties"/>
+                <include name="**/*.wsdl"/>
+                <include name="**/*.xsd"/>
+                <include name="**/*.xml"/>
+            </fileset>
+        </copy>
+        
+    </target>
+    <target name="build.proNotExist" unless="build.propExist">
+        <fail message="${build.properties} cannot be found. This file is provided as part of the freebXMl Registry distribution and via CVS as of version 3.0-final1."/>
+    </target>
+    <target depends="prepare" description="Only used to compile custom ANT tasks" name="jar.custom.ant">
+        <mkdir dir="${build.home}/ant"/>
+        <javac fork="true" source="${compile.target}" target="${compile.target}" destdir="${build.home}/ant" srcdir="${src.home}/build">
+            <classpath>
+                <pathelement path="${java.class.path}"/>
+                <pathelement location="${build.lib}/ant.jar"/>
+            </classpath>
+        </javac>
+        <jar basedir="${build.home}/ant" destfile="${build.lib}/ant-omar.jar"/>
+    </target>
+    <target depends="prepare" name="javacc">
+        <javacc debugparser="false" debugtokenmanager="false" errorreporting="true" javacchome="${javacc.home}" static="false" target="${src.java}/org/freebxml/omar/server/query/sql/SQLParser.jj"/>
+    </target>
+    <target depends="prepare" name="jjdoc">
+        <jjdoc
+            target="${src.java}/org/freebxml/omar/server/query/sql/SQLParser.jj"
+            javacchome="${javacc.home}"
+            onetable="true"
+        />
+    </target>
+    <target depends="prepare" description="Checks if generated UI Config bindings are upToDate." name="check.bindings">
+        <uptodate property="is.bindings.upToDate" srcfile="${file.ui.schema}" targetfile="${dir.ui.bindings}/Name.java"/>
+    </target>
+    
+    <target depends="check.bindings, define.xjc"
+            description="Generate UI Config bindings if they're not upToDate"
+            name="bindings"
+            unless="is.bindings.upToDate">
+        <delete>
+            <fileset dir="${dir.ui.bindings}">
+                <include name="**/*"/>
+            </fileset>
+        </delete>
+        
+        <setproxy proxyhost="${proxyHost}" proxyport="${proxyPort}"/>
+        <xjc schema="${file.ui.schema}"
+             extension="true"
+             package="${package.ui.bindings}" target="${src.java}">
+            <!--produces dir="gen-src" includes="**/*.java"/-->
+        </xjc>
+    </target>
+    
+    <!-- target name="compile" depends="javacc,install.endorsed" -->
+    <target depends="compile.all" name="compile"/>
+    
+    <!-- ??? May wish to silence stop.tomcat (using an alternative target) in
+       these combinations -->
+    <target name="deploy.restart" depends="stop.tomcat,deploy,start.tomcat"/>
+    
+    <target name="deploy.debug" depends="stop.tomcat,deploy,debug.tomcat"/>
+    
+    <target name="restart.tomcat" depends="stop.tomcat,start.tomcat"/>
+    <target depends="stop.tomcat,start.tomcat"
+            description="Restart Tomcat"
+            name="bounce.tomcat"/>
+    
+    <!-- Bring common elements of stop / start commands together -->
+    <macrodef name="stop_tomcat">
+        <element name="addArgs" implicit="true" optional="true"/>
+        <sequential>
+            <exec executable="${catalina.home}/bin/catalina.${script.suffix}">
+                <arg value="stop"/>
+                <env key="CATALINA_BASE" value="${catalina.base}"/>
+                <addArgs/>
+            </exec>
+            <sleep seconds="10"/>
+        </sequential>
+    </macrodef>
+    <macrodef name="start_tomcat">
+        <attribute name="cmdPrefix" default=""/>
+        <element name="addArgs" implicit="true" optional="true"/>
+        <sequential>
+            <exec executable="${catalina.home}/bin/catalina.${script.suffix}">
+                <arg line="@{cmdPrefix}start"/>
+                <env key="CATALINA_BASE" value="${catalina.base}"/>
+                <env key="JAVA_OPTS"
+                    value="-DproxySet=true
+                    -DproxyHost=${proxyHost}
+                    -DproxyPort=${proxyPort}
+                ${catalina.java.opts}"/>
+                <addArgs/>
+            </exec>
+            <sleep seconds="10"/>
+        </sequential>
+    </macrodef>
+    
+    <target description="Stop Tomcat" name="stop.tomcat">
+        <echo message="****************Tomcat shutting down...*******************"/>
+        <stop_tomcat/>
+        <echo message="****************Tomcat shutdown*******************"/>
+    </target>
+    
+    <target description="Start Tomcat" name="start.tomcat">
+        <echo message="****************Tomcat starting up...*******************"/>
+        <start_tomcat/>
+        <echo message="****************Tomcat started*******************"/>
+    </target>
+    
+    <target name="jpda.tomcat">
+        <echo message="****************Tomcat starting up...*******************"/>
+        <start_tomcat cmdPrefix="jpda ">
+            <env key="JPDA_TRANSPORT" value="dt_socket"/>
+            <env key="JPDA_ADDRESS" value="${server.debugSocket}"/>
+        </start_tomcat>
+        <echo message="****************Tomcat started*******************"/>
+        <echo message="Tomcat started with jpda debugging enabled.  Attach to
+        Tomcat on port ${server.debugSocket}"/>
+    </target>
+    
+    <target name="debug.tomcat">
+        <echo message="****************Tomcat starting up...*******************"/>
+        <start_tomcat>
+            <env key="CATALINA_OPTS"
+                 value="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${server.debugSocket}"/>
+        </start_tomcat>
+        <echo message="****************Tomcat started*******************"/>
+        <echo message="Tomcat started with debugging enabled.  Attach to
+        Tomcat on port ${server.debugSocket}"/>
+    </target>
+    
+    <target name="waitfor.tomcat">
+        <waitfor maxwait="3" maxwaitunit="minute"
+                 checkevery="10" checkeveryunit="second"
+                 timeoutproperty="tomcat.timeout">
+            <http url="${omar.container.url}"/>
+        </waitfor>
+        <fail if="tomcat.timeout" message="!! Tomcat not available !!"/>
+        <echo message="****************Tomcat available*******************"/>
+    </target>
+    
+    <target name="-checkfor.database">
+        <condition property="database.server.expected">
+            <istrue value="${dbDeploymentStartServer}"/>
+        </condition>
+    </target>
+    <target name="waitfor.database" depends="-checkfor.database"
+            if="database.server.expected">
+        <waitfor maxwait="5" maxwaitunit="minute"
+                 checkevery="15" checkeveryunit="second"
+                 timeoutproperty="tomcat.timeout">
+            <!-- ??? May want parameters for the database server host and port. -->
+            <socket server="localhost" port="1527"/>
+        </waitfor>
+        <fail if="tomcat.timeout" message="!! No dB server available !!"/>
+        <echo message="****************dB available*******************"/>
+    </target>
+    
+    <target name="clear.tomcat.logs">
+        <echo message="****************Clearing Tomcat logs...*******************"/>
+        <delete>
+            <fileset dir="${catalina.base}/logs" includes="*"/>
+        </delete>
+        <echo message="****************Tomcat logs cleared*******************"/>
+    </target>
+    
+    <target name="clear.omar.logs">
+        <delete>
+            <fileset dir=".">
+                <include name="derby.log"/>
+                <include name="omar*.log"/>
+                <include name="omar*.log.*"/>
+                <include name="response.xml"/>
+                <include name="senderReq.mime"/>
+                <include name="testGenerateRegistryIssuedCertificate.p12"/>
+            </fileset>
+        </delete>
+    </target>
+    
+    <property name="NL" value="&#x0A;"/>
+    <property name="TAB" value="&#x09;"/>
+    <target name="check-security">
+        <condition property="security-constraints" value=
+                   "${TAB}&lt;security-constraint&gt;${NL}
+                   ${TAB}${TAB}&lt;web-resource-collection&gt;${NL}
+                   ${TAB}${TAB}${TAB}&lt;web-resource-name&gt;omar&lt;/web-resource-name&gt;${NL}
+                   ${TAB}${TAB}${TAB}&lt;url-pattern&gt;/registry/thin/*&lt;/url-pattern&gt;${NL}
+                   ${TAB}${TAB}${TAB}&lt;url-pattern&gt;/registry/http/*&lt;/url-pattern&gt;${NL}
+                   ${TAB}${TAB}${TAB}&lt;http-method&gt;GET&lt;/http-method&gt;${NL}
+                   ${TAB}${TAB}${TAB}&lt;http-method&gt;POST&lt;/http-method&gt;${NL}
+                   ${TAB}${TAB}&lt;/web-resource-collection&gt;${NL}
+                   ${TAB}${TAB}&lt;auth-constraint&gt;${NL}
+                   ${TAB}${TAB}${TAB}&lt;role-name&gt;${authConstraintRoleName}&lt;/role-name&gt;${NL}
+                   ${TAB}${TAB}&lt;/auth-constraint&gt;${NL}
+                   ${TAB}&lt;/security-constraint&gt;${NL}
+                   ${TAB}&lt;login-config&gt;${NL}
+                   ${TAB}${TAB}&lt;auth-method&gt;FORM&lt;/auth-method&gt;${NL}
+                   ${TAB}${TAB}&lt;realm-name&gt;default&lt;/realm-name&gt;${NL}
+                   ${TAB}${TAB}&lt;form-login-config&gt;${NL}
+                   ${TAB}${TAB}${TAB}&lt;form-login-page&gt;/registry/thin/Login.jsp&lt;/form-login-page&gt;${NL}
+                   ${TAB}${TAB}${TAB}&lt;form-error-page&gt;/registry/thin/LoginError.jsp&lt;/form-error-page&gt;${NL}
+                   ${TAB}${TAB}&lt;/form-login-config&gt;${NL}
+                   ${TAB}&lt;/login-config&gt;${NL}">
+            <istrue value="${deployWithSecurityConstraints}"/>
+        </condition>
+        <condition property="security-constraints" value="">
+            <or>
+                <isfalse value="${deployWithSecurityConstraints}"/>
+                <not>
+                    <isset property="deployWithSecurityConstraints"/>
+                </not>
+            </or>
+        </condition>
+        <condition property="security-build-msg" value=
+                   "---------------------------------------------------------------------------${NL}
+                   NOTE: The ebxmlrr web client will be deployed with security constraints.${NL}
+                   Ensure that any users you wish to access the system are defined in the${NL}
+                   web container&apos;s user list and assigned the role of &apos;${authConstraintRoleName}&apos;${NL}
+                   Also, be sure to add the Registry Guest user with login id of &apos;${guestPrincipalName}&apos;${NL}
+                   and password of &apos;${guestPrincipalName}&apos;${NL}
+        ---------------------------------------------------------------------------${NL}">
+            <istrue value="${deployWithSecurityConstraints}"/>
+        </condition>
+        <condition property="security-build-msg" value=
+                   "---------------------------------------------------------------------------${NL}
+                   NOTE: The ebxmlrr web client will be deployed with no security constraints.${NL}
+        ---------------------------------------------------------------------------${NL}">
+            <or>
+                <isfalse value="${deployWithSecurityConstraints}"/>
+                <not>
+                    <isset property="deployWithSecurityConstraints"/>
+                </not>
+            </or>
+        </condition>
+    </target>
+    
+    <target name="prepare-web.xml" depends="check-security">
+        <copy file="${omar.conf}/web.xml.template" tofile="${build.home}/conf/web.xml" overwrite="true"/>
+        <replace file="${build.home}/conf/web.xml" token="@security-constraints@" value="${security-constraints}"/>
+        <replace file="${build.home}/conf/web.xml" token="@omar.name@" value="${omar.name}"/>
+        <copy file="${src.home}/jsp/org/freebxml/omar/client/ui/thin/Login.jsp.template"
+              tofile="${src.home}/jsp/org/freebxml/omar/client/ui/thin/Login.jsp"
+              overwrite="true"/>
+        <replace file="${src.home}/jsp/org/freebxml/omar/client/ui/thin/Login.jsp"
+                 token="@guest-principal-name@"
+                 value="${guestPrincipalName}"/>
+        <echo message="${security-build-msg}"/>
+    </target>
+    
+    <target depends="prepare" name="conf">
+        <!-- Copy conf to build/conf, except build_for_bin.xml and files prepare
+	 handled -->
+        <copy todir="${build.home}/conf">
+            <fileset dir="${omar.conf}">
+                <exclude name="build_for_bin.xml"/>
+                <!-- Select files not already in ${build.home}/conf -->
+                <present present="srconly" targetdir="${build.home}/conf"/>
+            </fileset>
+        </copy>
+    </target>
+    <!-- Create the source distribution -->
+    <target depends="clean" name="distSrc">
+        <!--
+         note that the source distribution is only a compressed cvs tree,
+         excluding the folders dist and distributions
+    -->
+        <mkdir dir="${distributions.home}"/>
+        <mkdir dir="${dist.home}/source/omar-${dist.version}/omar"/>
+        <!-- Copy the folders to dist, excludes dist, distributions and libraries -->
+        <copy todir="${dist.home}/source/omar-${dist.version}/omar">
+            <fileset dir="${omar.basedir}" excludes="${dist.home}/**,${distributions.home}/**,local.build.properties"/>
+        </copy>
+        <!-- Generate zipped source distribution -->
+        <zip zipfile="${distributions.home}/omar-${dist.version}-src.zip">
+            <zipfileset dir="${dist.home}/source"/>
+        </zip>
+        <!-- Generate gzipped source distribution -->
+        <tar basedir="${dist.home}/source" tarfile="${distributions.home}/source.tar"/>
+        <gzip src="${distributions.home}/source.tar" zipfile="${distributions.home}/omar-${dist.version}-src.tar.gz"/>
+        <delete file="${distributions.home}/source.tar"/>
+    </target>
+    <!-- Create the binary distribution -->
+    <target depends="clean, compile, doc, conf" name="distBin">
+        <!--
+         the binary distribution is the compressed file of build directory
+         plus the files in the root dir of cvs tree (i.e. build.properties,...)
+         and samples documents.
+    -->
+        <mkdir dir="${distributions.home}"/>
+        <mkdir dir="${dist.home}/binary/omar"/>
+        <!-- Copy the folders in build to dist, excludes the libraries -->
+        <copy todir="${dist.home}/binary/omar">
+            <fileset dir="${build.home}" excludes="lib/**/*.jar,lib/**/*.war,lib/**/*.zip"/>
+        </copy>
+        <!-- now generate build.xml for binary distribution -->
+        <xslt in="build.xml"
+              out="${dist.home}/binary/omar/build.xml"
+              processor="trax"
+              style="conf/build_for_bin.xsl">
+            <classpath location="${libs.ant-trax.jar}"/>
+            <outputproperty name="method" value="xml"/>
+            <outputproperty name="encoding" value="iso8859_1"/>
+            <outputproperty name="indent" value="yes"/>
+        </xslt>
+        <!-- Copy the build.sh, build.bat to dist -->
+        <copy todir="${dist.home}/binary/omar">
+            <fileset dir="." excludes="local.build.properties, build.xml" includes="*.*"/>
+        </copy>
+        <!-- Copy the samples documents to dist -->
+        <mkdir dir="${dist.home}/binary/omar/${samples}"/>
+        <copy todir="${dist.home}/binary/omar/${samples}">
+            <fileset dir="${samples}"/>
+        </copy>
+        <!-- Generate zipped binary distribution -->
+        <zip zipfile="${distributions.home}/omar-${dist.version}-bin.zip">
+            <zipfileset dir="${dist.home}/binary"/>
+        </zip>
+        <!-- Generate gzipped binary distribution -->
+        <tar basedir="${dist.home}/binary" tarfile="${distributions.home}/binary.tar"/>
+        <gzip src="${distributions.home}/binary.tar" zipfile="${distributions.home}/omar-${dist.version}-bin.tar.gz"/>
+        <delete file="${distributions.home}/binary.tar"/>
+    </target>
+    <target depends="clean" name="distLib">
+        <mkdir dir="${distributions.home}"/>
+        <mkdir dir="${dist.home}/libraries"/>
+        <copy todir="${dist.home}/libraries">
+            <fileset dir="misc/lib" excludes="cloudscape*/**"/>
+        </copy>
+        <!-- Generate zipped libraries -->
+        <zip zipfile="${distributions.home}/omar-${dist.version}-libraries.zip">
+            <zipfileset dir="${dist.home}/libraries"/>
+        </zip>
+        <!-- Generate gzipped libraries -->
+        <tar basedir="${dist.home}/libraries" tarfile="${distributions.home}/libraries.tar"/>
+        <gzip src="${distributions.home}/libraries.tar" zipfile="${distributions.home}/omar-${dist.version}-libraries.tar.gz"/>
+        <delete file="${distributions.home}/libraries.tar"/>
+    </target>
+    <target depends="compile" name="common"/>
+    <target depends="clean, distSrc" name="dist"/>
+    
+    <target name="run.browser"
+            description="Run the Registry Browser"
+            depends="jar.browser">
+        <property name="jvmarg" value=""/>
+        <java fork="yes" jar="${build.lib}/${browser.name}.jar">
+            <jvmarg line="${jvmarg}"/>
+            <!--
+      <sysproperty key="javax.net.ssl.trustStorePassword"
+        value="${jaxr-ebxml.ssl.trustStorePassword}"/>
+      <sysproperty key="javax.net.ssl.trustStore"
+        value="${jaxr-ebxml.ssl.trustStore}"/>
+      -->
+            <sysproperty key="java.endorsed.dirs" value="${build.lib.endorsed}"/>
+            <sysproperty key="http.proxyHost" value="${proxyHost}"/>
+            <sysproperty key="http.proxyPort" value="${proxyPort}"/>
+            <sysproperty key="jaxr-ebxml.security.jaas.callbackHandlerClassName"
+                         value="${jaxr-ebxml.security.jaas.callbackHandlerClassName}"/>
+        </java>
+    </target>
+    <target name="debug.browser"
+            description="Run the Registry Browser in debug mode">
+        <echo message="Starting the Registry Browser with debugging enabled.  Attach to the browser on port ${client.debugSocket}"/>
+        <echo message="Registry Browser is suspended at startup."/>
+        <antcall target="run.browser">
+            <param name="jvmarg" value="-Xdebug -Xrunjdwp:transport=dt_socket,address=${client.debugSocket},server=y,suspend=n"/>
+        </antcall>
+    </target>
+    <target name="debug.adminTool">
+        <echo message="Starting the Admin Tool with debugging enabled."/>
+        <echo message="Attach to the Admin Tool on port ${client.debugSocket}"/>
+        <echo message="Admin Tool is suspended at startup."/>
+        <antcall target="run.adminTool">
+            <param name="jvmarg" value="-Xdebug -Xrunjdwp:transport=dt_socket,address=${client.debugSocket},server=y,suspend=y"/>
+        </antcall>
+    </target>
+    
+    <target name="run.adminTool" depends="jar.adminTool">
+        <property name="jvmarg" value=""/>
+        <java fork="yes" jar="${build.lib}/${adminTool.name}.jar">
+            <jvmarg line="${jvmarg}"/>
+            <arg line="${adminTool.args}"/>
+        </java>
+    </target>
+    <target depends="prepare, -check.compile.tomcat.listener" name="doc">
+        <copy todir="${build.home}/doc">
+            <fileset dir="doc">
+                <exclude name="specs"/>
+            </fileset>
+        </copy>
+        <copy flatten="yes" todir="${build.home}/doc/api/images">
+            <fileset dir="${src.home}">
+                <patternset id="">
+                    <include name="**/*.gif/"/>
+                </patternset>
+            </fileset>
+        </copy>
+        <javadoc author="true"
+                 destdir="${build.home}/doc/api"
+                 doctitle="freebXML Registry API"
+                 maxmemory="128m"
+                 use="true"
+                 version="false"
+                 windowtitle="ebXML Registry API">
+            <classpath>
+                <path refid="test.compile.classpath"/>
+                <!-- Ant classes used directly in Admin Tool -->
+                <pathelement location="${build.lib}/ant.jar"/>
+                <!-- somewhat redundant w.r.t. test.compile.classpath -->
+                <path refid="tomcat.compile.classpath"/>
+            </classpath>
+            <packageset dir="${src.java}" defaultexcludes="yes">
+                <include name="org/freebxml/omar/**" />
+                <exclude name="org/freebxml/omar/server/container/**"
+                        unless="compile.tomcat.listener"/>
+                <exclude name="org/freebxml/omar/common/security/xwssec*/**"/>
+                <exclude name="com/dummy/test/doc-files/**"/>
+            </packageset>
+            <packageset dir="${src.java}" defaultexcludes="yes">
+                <include name="${soapSecurityProviderDir}/**" />
+                <exclude name="com/dummy/test/doc-files/**"/>
+            </packageset>
+            <link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
+            <!-- likely not correct for all ${soapSecurityProviderDir} options -->
+            <link href="http://java.sun.com/webservices/docs/1.6/api"/>
+            <!-- mostly for Activation classes -->
+            <link href="http://java.sun.com/j2ee/1.4/docs/api"/>
+            <!-- for use within server/container package -->
+            <link href="http://db.apache.org/derby/javadoc/publishedapi"/>
+            <!-- for use within server/container package -->
+            <link href="http://tomcat.apache.org/tomcat-5.0-doc/catalina/docs/api"/>
+        </javadoc>
+    </target>
+    <target name="genUUID">
+        <!-- Default: generate 1 UUID, use -Dcnt=10 to generate 10 -->
+        <property name="cnt" value="1"/>
+        <java classname="org.freebxml.omar.common.UUIDFactory" failonerror="true" fork="yes">
+            <arg value="cnt=${cnt}"/>
+            <classpath refid="server.run.classpath"/>
+        </java>
+    </target>
+    <target name="clean" description="Delete old build and dist directories" >
+        <delete quiet="true" dir="${build.home}"/>
+        <mkdir dir="${build.classes}"/>
+        <mkdir dir="${build.home}/test/classes"/>
+        <delete quiet="true" dir="${dist.home}"/>
+        <delete quiet="true" dir="${distributions.home}"/>
+        <!--Delete javacc generated files for the SQL Query processor in server -->
+        <delete quiet="true">
+            <fileset dir="${src.java}/org/freebxml/omar/server/query/sql">
+                <include name="*.java"/>
+                <exclude name="SQLQueryProcessor.java"/>
+                <exclude name="PrunePredicateException.java"/>
+            </fileset>
+        </delete>
+        
+        <!-- Delete wscompile-generated files for the CMS (test.unit.deploy)
+         endpoints -->
+        <delete quiet="true">
+            <fileset dir="${src.java}/org/freebxml/omar/common/jaxrpc/cms/cataloging/server">
+                <exclude name="wscompile-config.xml"/>
+            </fileset>
+            <fileset dir="${src.java}/org/freebxml/omar/common/jaxrpc/cms/validation/server">
+                <exclude name="wscompile-config.xml"/>
+            </fileset>
+        </delete>
+        
+        <!-- Delete xjc-generated files for the (omar-ui-conf-bindings.jar) UI
+         config bindings, leaving only the default excludes in this source
+         directory.  (This dir contains only .cvsignore and empty
+         sub-directories in the CVS repository.) -->
+        <delete quiet="true">
+            <fileset dir="${dir.ui.bindings}">
+                <include name="**/*"/>
+            </fileset>
+        </delete>
+    </target>
+    
+    <!-- Note: This target operates correctly only when you have a deployed
+       instance running at http://localhost:8080/omar/ -->
+    <target name="run.xalan.test"
+            description="Test XSL transformations with this target">
+        <xslt basedir="${samples}"
+              destdir="${java.io.tmpdir}"
+              includes="ServiceInstance1.xml"
+              processor="trax"
+              style="${samples}/minDB/Common.xsl">
+            <classpath location="${libs.ant-trax.jar}"/>
+        </xslt>
+    </target>
+    
+    <target name="localizeJavaFile">
+        <property name="file" value=""/>
+        <java classname="org.freebxml.omar.common.util.JavaFileLocalizer" failonerror="true" fork="yes">
+            <arg value="${omar.basedir}"/>
+            <arg value="${file}"/>
+            <classpath refid="server.run.classpath"/>
+        </java>
+    </target>
+</project>

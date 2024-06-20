@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--$Header: /cvsroot/ebxmlrr/omar/src/java/org/freebxml/omar/common/jaxrpc/registry/client/wscompile-config.xml,v 1.1 2004/03/05 22:55:37 farrukh_najmi Exp $-->
+<configuration
+    xmlns="http://java.sun.com/xml/ns/jax-rpc/ri/config">
+    <wsdl
+        location="../ebxmlrr-spec/misc/3.0/services/ebXMLRegistryServices.wsdl"
+        packageName="org.freebxml.omar.common.jaxrpc.registry.client" />
+</configuration>
