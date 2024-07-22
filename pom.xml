@@ -9,6 +9,11 @@
     <name>freebXML Registry Project</name>
     <url>http://ebxmlrr.sourceforge.net/</url>
 
+    <properties>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+    </properties>
+
     <organization>
         <name>freebXML Software Foundation</name>
         <url>http://ebxmlrr.sourceforge.net/</url>
@@ -46,45 +51,31 @@
     
     <repositories>
         <repository>
-            <id>omar-maven2-repository</id>
-            <url>http://ebxmlrr.sourceforge.net/maven2/repository</url>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+<!--        <repository>-->
+<!--            <id>pavlab</id>-->
+<!--            <url>https://maven2.pavlab.msl.ubc.ca/</url>-->
+<!--        </repository>-->
+        <repository>
+            <id>adobe-public</id>
+            <url>https://repo.adobe.com/nexus/content/repositories/public/</url>
         </repository>
         <repository>
-            <id>maven2-repository.dev.java.net</id>
-            <url>http://download.java.net/maven/2</url>
+            <id>mulesoft</id>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
         </repository>
         <repository>
-            <id>maven-repository.dev.java.net</id>
-            <url>http://download.java.net/maven/1</url>
-            <layout>legacy</layout>
-        </repository>
-        <repository>
-            <id>Codehaus Snapshots</id>
-            <url>http://snapshots.repository.codehaus.org/</url>
-            <snapshots>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
+            <id>imagej</id>
+            <url>https://maven.imagej.net/content/repositories/public/</url>
         </repository>
     </repositories>
+    
     <pluginRepositories>
         <pluginRepository>
-            <id>omar-maven2-repository</id>
-            <url>http://ebxmlrr.sourceforge.net/maven2/repository</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>maven2-repository.dev.java.net</id>
-            <url>http://download.java.net/maven/2</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>maven-repository.dev.java.net</id>
-            <url>http://download.java.net/maven/1</url>
-            <layout>legacy</layout>
-        </pluginRepository>
-        <pluginRepository>
             <id>Codehaus Snapshots</id>
-            <url>http://snapshots.repository.codehaus.org/</url>
+            <url>https://snapshots.repository.codehaus.org/</url>
             <snapshots>
             </snapshots>
             <releases>
@@ -93,5 +84,19 @@
         </pluginRepository>
     </pluginRepositories>
     
-    
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
+                    <configuration>
+                        <source>1.8</source>
+                        <target>1.8</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

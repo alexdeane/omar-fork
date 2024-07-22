@@ -20,7 +20,7 @@
         <dependency>
             <groupId>javax.xml</groupId>
             <artifactId>jaxr-api</artifactId>
-            <version>1.0_03</version>
+            <version>1.0_04</version>
         </dependency>
                 
         <dependency>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>jaxb</groupId>
             <artifactId>jaxb-libs</artifactId>
-            <version>1.0.5</version>
+            <version>1.3</version>
             <optional>true</optional>
         </dependency>
         <dependency>
