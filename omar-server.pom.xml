@@ -14,6 +14,9 @@
     <name>freebXML Registry Project server code</name>
     <url>http://ebxmlrr.sourceforge.net/</url>
         
+    <build>
+        <sourceDirectory>src/java/org/freebxml/omar/server</sourceDirectory>
+    </build>
     
     <dependencies>
         <!--Need JAXR provider for federated query support-->

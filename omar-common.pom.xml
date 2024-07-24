@@ -13,7 +13,11 @@
     <packaging>jar</packaging>
     <name>freebXML Registry Project common code</name>
     <url>http://ebxmlrr.sourceforge.net/</url>
-    
+
+    <build>
+        <sourceDirectory>src/java/org/freebxml/omar/common</sourceDirectory>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>javax.xml</groupId>
